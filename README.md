@@ -9,4 +9,4 @@ This is my SDD HSC Major project.
 - Added GameAssets to repository.
 ### 23/12/2021
 - Made some slight changes to project hierarchy, moved GameAssets to a new directory, moved both scripts and GameAssets to Contents.
-- Implemented function to access a shortcut's target from the .lnk file directly. This enabled me to move directories and still preserve functionality.
+- ## Implemented function to access a shortcut's target from the .lnk file directly. This enables me to move directories and still preserve functionality.
