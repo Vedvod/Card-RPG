@@ -66,6 +66,10 @@ class Element(pygame.sprite.Sprite):
             coords=cartesian(self.position)
         screen.blit(self.icon, (coords[0]-pygame.Surface.get_size(self.icon)[0]/2, coords[1]-pygame.Surface.get_size(self.icon)[1]/2))
         "" #a function that takes a cartesian coordinate input (i.e. (0, 0) is centering object on center of screen), then converts it to pygame coordinates.
+    
+    def move(self, x_shift=0, y_shift=0):
+        self.position=self.position[0]+x_shift, self.position[1]+y_shift
+        "" #a function to move the element
 
     def sprite(self):
         return self.base[self.sprite_num-1]

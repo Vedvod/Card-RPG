@@ -13,12 +13,14 @@ for i in os.getcwd().split(chr(92)):
         pass
 
 #-----------------------function(s)-----------------------
-def main_loop():
+def main_loop(sprite_list=[]):
     fps=60
     colour_tuple = 55, 55, 55
     while 1:
         screen.fill(colour_tuple)
-	
+        for i in sprite_list:
+            i.place()
+            i.move(x_shift=3)
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
         pygame.display.flip()
@@ -29,5 +31,5 @@ def main_loop():
 screen = pygame.display.set_mode(display_size)
 
 #------------------------main line------------------------
-main_loop()
+main_loop([])
 input("Press Enter to exit the script...")

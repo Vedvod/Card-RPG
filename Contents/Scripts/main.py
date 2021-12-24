@@ -11,24 +11,25 @@ for i in os.getcwd().split(chr(92)):
         break
     except:
         pass
-os.system("cls"); print("pygame 2.6.9 (SDL 2.0.22, Python 3.11.5)")
 
 #-----------------------function(s)-----------------------
-def main_loop():
+def main_loop(sprite_list=[]):
     fps=60
     colour_tuple = 55, 55, 55
     while 1:
         screen.fill(colour_tuple)
-        test.place()
-        test.rescale(1.001)
+        for i in sprite_list:
+            i.place()
+            i.move(x_shift=3)
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
         pygame.display.flip()
         pygame.time.delay(int(1000/fps))
+#-------------------------classes-------------------------
 
 #--------------------------setup--------------------------
 screen = pygame.display.set_mode(display_size)
-test=Element(size_tuple=(75, 120))
+
 #------------------------main line------------------------
-main_loop()
+main_loop([])
 input("Press Enter to exit the script...")
