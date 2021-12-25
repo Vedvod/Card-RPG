@@ -7,49 +7,52 @@ display_size[1]-=70
 
 #-----------------------function(s)-----------------------
 def getTarget(lnk_file):
-    lnk_file = open(lnk_file, "rb").read()
+    lnk_file = open(lnk_file, "rb").read() #open the file in byte read mode
     cont, track, final=1, 0, ""
-    for n, i in enumerate(lnk_file):
-        if not cont:
+    for n, i in enumerate(lnk_file): #iterate through each byte
+        if not cont: #if the target was located
             break
-        if i in range(65, 91):
-            if chr(lnk_file[n+1])==":":
-                track=1
-        if track==1:
-            if i==0:
-                cont=0
+        if i in range(65, 91): #if the byte is the ascii code for a letter
+            if chr(lnk_file[n+1])==":": #if the code after is a colon
+                track=1 #start reading the string
+        if track==1: #if reading
+            if i==0: #if reading past the target string
+                cont=0 #stop reading
             else:
-                final+=chr(i)
+                final+=chr(i) #add to output string
     return final
+    "" #finds the location that a shortcut file (.lnk) leads to
 
 def play(location):
-    import os
-    global os
     from playsound import playsound
     import threading
     def thread_funct(locate):
         playsound(locate)
     x = threading.Thread(target=thread_funct, args=(location,), daemon=True)
     x.start()
+    "" #play a sound from file
 
 def scalar(vector):
-    x, y = vector[1][0]-vector[0][0], vector[1][1]-vector[0][1]
-    return math.sqrt(x**2 + y**2)
+    x, y = vector[1][0]-vector[0][0], vector[1][1]-vector[0][1] #gets the differences in x and y coordinates
+    return math.sqrt(x**2 + y**2) #uses pythagorus to find hypotenuse (shortest distance) length
+    "" #find the modulus of a vector
 
 def project(vector_1, vector_2):
-    magnitude = scalar(vector_2)
-    #print(f"Projecting a vector of length {magnitude} onto the vector between {vector_1[0]} and {vector_1[1]}:")
-    x, angle = cmath.polar(complex(vector_1[1][0], vector_1[1][1])-complex(vector_1[0][0], vector_1[0][1]))
-    projection=(vector_1[0][0]+magnitude*math.cos(angle), vector_1[0][1]+magnitude*math.sin(angle))
-    return ((0, 0), projection)
+    magnitude = scalar(vector_2) #find modulus of the second vector
+    _, angle = cmath.polar(complex(vector_1[1][0], vector_1[1][1])-complex(vector_1[0][0], vector_1[0][1])) #find the polar coordinates angle of vector 1 shifted to (0, 0)
+    projection=(0, 0),(vector_1[0][0]+magnitude*math.cos(angle), vector_1[0][1]+magnitude*math.sin(angle)) #make a vector in the direction of vector 1 with the same length as vector 2
+    return projection
+    "" #a basic vector projection function
 
 def cartesian(coords):
-    w, h = pygame.display.get_surface().get_size()
-    return (coords[0]+w/2, coords[1]+h/2)
+    w, h = pygame.display.get_surface().get_size() #find the size of the screen
+    return (coords[0]+w/2, coords[1]+h/2) #use width/2 and height/2 as the origin, rather than the top left
+    "" #a function to move the origin to the middle of the screen
 
 #-------------------------classes-------------------------
 class Element(pygame.sprite.Sprite):
-    def __init__(self, coords=(0, 0), paths_to_assets=[r"GameAssets/DefaultSprite.png"], size_tuple="", degrees_of_rotation=0, sprite_num=1):
+    def __init__(self, coords=(0, 0), paths_to_assets=[getTarget("GameAssets.lnk")+r"/DefaultSprite.png"], size_tuple="", degrees_of_rotation=0, sprite_num=1):
+        super().__init__()
         self.position=coords
         self.base=[pygame.image.load(x) for x in paths_to_assets]
         self.size=size_tuple
@@ -58,7 +61,7 @@ class Element(pygame.sprite.Sprite):
         if size_tuple=="":
             self.size=self.base[sprite_num-1].get_size()
         self.icon=pygame.transform.rotate(pygame.transform.scale(self.base[self.sprite_num-1], self.size), self.rotation)
-        screen.blit(self.icon, self.position)
+        screen.blit(self.icon, cartesian(self.position))
         "" #a function that is essential to the class, defining initial attributes.
 
     def place(self, coords="much too late"):
@@ -112,6 +115,7 @@ class Element(pygame.sprite.Sprite):
         else:
             raise ValueError("Size must be positive!")
         "" #a function that changes the height and width of an element by a common ratio, then updates its icon.
+    "" #the base class for all elements
 
 if os.path.basename(__file__)=="PyGameTemplate.py":
     input("Press Enter to exit the script...")

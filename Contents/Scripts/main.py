@@ -1,26 +1,27 @@
-debug=0
+debug=0 #debug is set to off
 #-------------------------modules-------------------------
 import os, pygame
-if debug: print(os.cwd())
-for i in os.getcwd().split(chr(92)):
-    try: a.append(i)
+
+#--------------------------setup--------------------------
+if debug: print(os.cwd()) #debug message to ensure correct working directory
+for i in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
+    try: a.append(i) #move onto the next step
     except: a=[i]
     try:
-        if debug: print("/".join(a)+r"PyGameTemplate.py")
-        exec(open("/".join(a)+r"PyGameTemplate.py").read())
-        break
+        if debug: print("/".join(a)+r"PyGameTemplate.py") #debug message to ensure the dir building is correct
+        exec(open("/".join(a)+r"PyGameTemplate.py").read()) #attempt to locate template file at current dir level
+        break #if the file is opened
     except:
         pass
 
 #-----------------------function(s)-----------------------
-def main_loop(sprite_list=[]):
-    fps=60
-    colour_tuple = 55, 55, 55
+def main_loop(sprite_list=[]): #the main pygame loop
+    fps=60; colour_tuple = 55, 55, 55
     while 1:
         screen.fill(colour_tuple)
         for i in sprite_list:
             i.place()
-            i.move(x_shift=3)
+            i.rescale(1.0075, 1.012)
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
         pygame.display.flip()
@@ -29,7 +30,8 @@ def main_loop(sprite_list=[]):
 
 #--------------------------setup--------------------------
 screen = pygame.display.set_mode(display_size)
+a=eval(open(r"C:\Users\vedvo\Documents\GitHub\Card-RPG\Contents\Scripts\level.cfg").read())
 
 #------------------------main line------------------------
-main_loop([])
+main_loop(a)
 input("Press Enter to exit the script...")
