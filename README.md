@@ -11,7 +11,8 @@ This is my SDD HSC Major project. As of now (26th December, 2021), I am unsure o
 
 ### 2021/12/23
 - I made some slight changes to the project hierarchy. I created a main [Contents](https://github.com/Vedvod/Card-RPG/tree/main/Contents) directory, containing both [GameAssets](https://github.com/Vedvod/Card-RPG/tree/main/Contents/GameAssets) and [Scripts](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts).
-- Implemented function to access a shortcut's target from the `.lnk` file directly. This will enable me to move directories and still preserve functionality, by using `.lnk` files instead of the directory itself.
+- Made and implemented a function to access a shortcut's target from the `.lnk` file directly. This will enable me to move directories and still preserve functionality, by using `.lnk` files instead of the directory itself.
+	- The function uses the 'read binary' functionality of `open()` and linearly searches until it finds the beginning and end of the target file path, saving the string found between these two.
 
 ## Alpha 1: Level file loader
 ### 2021/12/25
@@ -24,3 +25,12 @@ This is my SDD HSC Major project. As of now (26th December, 2021), I am unsure o
 ### 2021/12/26
 - I updated the project documentation. I mainly went over the changelog and clarified some badly-worded entries, and I changed the date format to `YYYY/MM/DD` (rather than `DD/MM/YY`) to follow [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601).
 
+### 2022/01/31
+Though not directly related to this project, I have made several concepts that may be used in the game.
+- Firstly, I made a ~gambling~
+
+### 2022/02/02
+- I revised some incomplete scripts, such as a button concept, which will likely be used as the basis of the GUI menus.
+- I updated some commenting on the [classes and functions script](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts/PyGameTemplate.py), and added in a `Timer` class, which can track the time since its creation, and be reset to a new start time
+  - This class will likely be used to set the activation cooldown of `Button()`, preventing rapid feedback from a single click.
+- I started work on a new version of the `Player(Element)` class, which will utilise the updated set of `Element` class functions and allow the user to move around.

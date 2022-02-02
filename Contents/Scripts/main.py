@@ -15,23 +15,22 @@ for i in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
         pass
 
 #-----------------------function(s)-----------------------
-def main_loop(sprite_list=[]): #the main pygame loop
-    fps=60; colour_tuple = 55, 55, 55
+def main_loop(sprite_list=[], colour_tuple = (55, 55, 55)): #the main pygame loop
+    fps=60
     while 1:
         screen.fill(colour_tuple)
         for i in sprite_list:
             i.place()
-            i.rescale(1.0075, 1.012)
+            if i.size[1]<150: i.rescale(1.002, 1.0075)
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
         pygame.display.flip()
         pygame.time.delay(int(1000/fps))
-#-------------------------classes-------------------------
 
 #--------------------------setup--------------------------
 screen = pygame.display.set_mode(display_size)
-a=eval(open(r"C:\Users\vedvo\Documents\GitHub\Card-RPG\Contents\Scripts\level.cfg").read())
+elements, bgcolour=(_:=eval(open(r"level.cfg").read()))[1:], _[0] #unpack and assign level configurations
 
 #------------------------main line------------------------
-main_loop(a)
+main_loop(elements, bgcolour)
 input("Press Enter to exit the script...")

@@ -8,23 +8,23 @@ display_size[1]-=70
 #-----------------------function(s)-----------------------
 def getTarget(lnk_file):
     lnk_file = open(lnk_file, "rb").read() #open the file in byte read mode
-    cont, track, final=1, 0, ""
+    keepGoing, track, final=1, 0, ""
     for n, i in enumerate(lnk_file): #iterate through each byte
-        if not cont: #if the target was located
+        if not keepGoing: #if the target was located
             break
         if i in range(65, 91): #if the byte is the ascii code for a letter
-            if chr(lnk_file[n+1])==":": #if the code after is a colon
+            if chr(lnk_file[n+1])==":": #if the letter after is a colon
                 track=1 #start reading the string
         if track==1: #if reading
             if i==0: #if reading past the target string
-                cont=0 #stop reading
+                keepGoing=0 #stop reading
             else:
                 final+=chr(i) #add to output string
     return final
     "" #finds the location that a shortcut file (.lnk) leads to
 
-def play(location):
-    from playsound import playsound
+def play(location): #MAYBE REPLACE WITH PYGAME.MIXER???
+    from playsound import playsound #
     import threading
     def thread_funct(locate):
         playsound(locate)
@@ -50,11 +50,21 @@ def cartesian(coords):
     "" #a function to move the origin to the middle of the screen
 
 #-------------------------classes-------------------------
+class Position:
+    def __init__(self, coordinates=(0, 0)):
+        self.coords=coordinates
+        self.x, self.y=self.coords
+
+    def cartesian(self):
+        w, h = pygame.display.get_surface().get_size() #find the size of the screen
+        return Position((self.x+w/2, self.y+h/2)) #use width/2 and height/2 as the origin, rather than the top left
+        "" #a function to move the origin to the middle of the screen
+
 class Element(pygame.sprite.Sprite):
-    def __init__(self, coords=(0, 0), paths_to_assets=[getTarget("GameAssets.lnk")+r"/DefaultSprite.png"], size_tuple="", degrees_of_rotation=0, sprite_num=1):
+    def __init__(self, coords=(0, 0), paths_to_assets=getTarget("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, sprite_num=1):
         super().__init__()
         self.position=coords
-        self.base=[pygame.image.load(x) for x in paths_to_assets]
+        self.base=[pygame.image.load(x) for x in list(paths_to_assets)]
         self.size=size_tuple
         self.rotation=degrees_of_rotation
         self.sprite_num=sprite_num
@@ -64,17 +74,17 @@ class Element(pygame.sprite.Sprite):
         screen.blit(self.icon, cartesian(self.position))
         "" #a function that is essential to the class, defining initial attributes.
 
-    def place(self, coords="much too late"):
-        if coords=="much too late":
-            coords=cartesian(self.position)
-        screen.blit(self.icon, (coords[0]-pygame.Surface.get_size(self.icon)[0]/2, coords[1]-pygame.Surface.get_size(self.icon)[1]/2))
+    def place(self, coords="much too late"): 
+        if coords=="much too late": #if coordinates not specified
+            coords=Position(self.position).cartesian() #use Element's stored coordinates
+        screen.blit(self.icon, (coords.x-pygame.Surface.get_size(self.icon)[0]/2, coords.y-pygame.Surface.get_size(self.icon)[1]/2)) #place element using cartesian coordinates
         "" #a function that takes a cartesian coordinate input (i.e. (0, 0) is centering object on center of screen), then converts it to pygame coordinates.
     
-    def move(self, x_shift=0, y_shift=0):
-        self.position=self.position[0]+x_shift, self.position[1]+y_shift
+    def move(self, x_shift=0, y_shift=0): 
+        self.position=self.position[0]+x_shift, self.position[1]+y_shift #add each shift
         "" #a function to move the element
 
-    def sprite(self):
+    def sprite(self): 
         return self.base[self.sprite_num-1]
         "" #a convenient shorthand for the currently toggled display sprite.
 
@@ -94,28 +104,57 @@ class Element(pygame.sprite.Sprite):
         "" #a function that sets the rotation of the element, then updates its icon
 
     def resize(self, new_size=(75, 75), relative=False):
-        if relative:
-            if (self.size[0]+new_size[0])>0 and (self.size[1]+new_size[1])>0:
-                self.size=self.size[0]+new_size[0], self.size[1]+new_size[1]
-            else:
-                raise ValueError("Size must be positive!")
-        elif new_size[1]>0 and new_size[0]>0:
-            self.size=new_size
+        if relative: #if size change is based on current size
+            if (self.size[0]+new_size[0])>0 and (self.size[1]+new_size[1])>0: #if both new sizes are valid
+                self.size=self.size[0]+new_size[0], self.size[1]+new_size[1] #change sizes
+            else: #if at least one size is invalid (negative)
+                raise ValueError("Size must be positive!") #error
+        elif new_size[1]>0 and new_size[0]>0: #if not relative, and both sizes are valid
+            self.size=new_size #change sizes
         else:
             raise ValueError("Size must be positive!")
         self.reinit()
         "" #a function that changes the size attribute of the element, then updates its icon.
 
     def rescale(self, scaleX, scaleY=-100):
-        if scaleY==-100 and scaleX>0:
-            scaleY=scaleX #use common ratio
-        if scaleX>0:
+        if scaleY==-100 and scaleX>0: #if scaleY has not been specified 
+            scaleY=scaleX #use common ratio to scale
+        if scaleX>0: #if scaleY was specified 
             self.size=self.size[0]*scaleX, self.size[1]*scaleY
             self.reinit()
-        else:
+        else: #if scaleX was invalid
             raise ValueError("Size must be positive!")
         "" #a function that changes the height and width of an element by a common ratio, then updates its icon.
     "" #the base class for all elements
 
+class Timer:
+    def __init__(self):
+        self.start_time=time.time()
+    def time(self):
+        return time.time()-self.start_time
+    def reset(self):
+        self.start_time=time.time()
+
+class Player(Element, Timer):
+    def __init__(self, coords=(0, 0), paths_to_assets=getTarget("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, sprite_num=1):
+        super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num)
+
+    def controls(self, speed=50):
+        inital_pos=Position(self.coords)
+        xi, yi = self.coords
+        x, y = 0, 0
+        pressed = pygame.key.get_pressed()
+        if pressed[pygame.K_LEFT]:
+            x-=speed
+        if pressed[pygame.K_RIGHT]:
+            x+=speed
+        if pressed[pygame.K_DOWN]:
+            y-=speed
+        if pressed[pygame.K_UP]:
+            y+=speed
+        self.go_to((x+xi, y+yi), speed)
+        self.place()
+
+#print(base_change(, 2))
 if os.path.basename(__file__)=="PyGameTemplate.py":
     input("Press Enter to exit the script...")
