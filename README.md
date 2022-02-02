@@ -13,6 +13,8 @@ This is my SDD HSC Major project. As of now (26th December, 2021), I am unsure o
 - I made some slight changes to the project hierarchy. I created a main [Contents](https://github.com/Vedvod/Card-RPG/tree/main/Contents) directory, containing both [GameAssets](https://github.com/Vedvod/Card-RPG/tree/main/Contents/GameAssets) and [Scripts](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts).
 - Made and implemented a function to access a shortcut's target from the `.lnk` file directly. This will enable me to move directories and still preserve functionality, by using `.lnk` files instead of the directory itself.
 	- The function uses the 'read binary' functionality of `open()` and linearly searches until it finds the beginning and end of the target file path, saving the string found between these two.
+- I implemented a function to access a shortcut's target from the `.lnk` file directly. This will enable me to move directories and still preserve functionality, by using `.lnk` files instead of the directory itself.
+- Using this function, I made some slight changes to the project hierarchy. I created a main [Contents](https://github.com/Vedvod/Card-RPG/tree/main/Contents) directory, containing both [GameAssets](https://github.com/Vedvod/Card-RPG/tree/main/Contents/GameAssets) and [Scripts](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts). In order to access [GameAssets](https://github.com/Vedvod/Card-RPG/tree/main/Contents/GameAssets) from [Scripts](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts), I have a GameAssets.lnk inside the [Scripts](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts) folder.
 
 ## Alpha 1: Level file loader
 ### 2021/12/25
