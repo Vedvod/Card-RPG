@@ -41,3 +41,7 @@ Though not directly related to this project, I have made several concepts that m
 - I updated some commenting on the [classes and functions script](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts/PyGameTemplate.py), and added in a `Timer` class, which can track the time since its creation, and be reset to a new start time
   - This class will likely be used to set the activation cooldown of `Button()`, preventing rapid feedback from a single click.
 - I started work on a new version of the `Player(Element)` class, which will utilise the updated set of `Element` class functions and allow the user to move around.
+
+### 2022/02/03
+- I implemented a solution to the sine wave stuttering, using a subroutine `to_multiple()`, which rounds a number to a multiple of another number, in this case to the period of the sine wave function.
+  - The duration is rounded, eliminating the incomplete periods problem. Since the sine waves have a high frequency, the change in duration is negligible.

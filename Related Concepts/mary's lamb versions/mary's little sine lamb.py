@@ -2,7 +2,8 @@
 import os, random, time, sys, math, winsound, numpy as np, matplotlib.pyplot as plt; from scipy.io.wavfile import write; from scipy import signal
 
 #-----------------------function(s)-----------------------
-make_44k_array = lambda duration, frequency: [np.sin(2*np.pi*frequency*i) for i in duration*np.linspace(0, 1, int(duration*44000))]
+to_multiple = lambda number, multiple: multiple*(number//multiple)
+make_44k_array = lambda duration, frequency: [np.sin(2*np.pi*frequency*i) for i in to_multiple(duration, 1/frequency)*np.linspace(0, 1, int(to_multiple(duration, 1/frequency)*44000))]
 m4a = make_44k_array
 #import matplotlib.pyplot as plt; plt.plot(m4a(1, 10), data="2 beat A5"); plt.plot(m4a(0.5, 10), data="1 beat A5"); plt.show()
 
