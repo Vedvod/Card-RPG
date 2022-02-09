@@ -13,24 +13,42 @@ for i in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
         break #if the file is opened
     except:
         pass
+original_size=display_size
+screen = pygame.display.set_mode(display_size, pygame.RESIZABLE, pygame.SCALED)
 
 #-----------------------function(s)-----------------------
-def main_loop(sprite_list=[], colour_tuple = (55, 55, 55)): #the main pygame loop
+def main_loop(sprite_list=[], colour_tuple = (55, 55, 55), background=Element(size_tuple=(1, 1), name="background")): #the main pygame loop
     fps=60
     while 1:
         screen.fill(colour_tuple)
+        background.place()
         for i in sprite_list:
             i.place()
-            if i.size[1]<150: i.rescale(1.002, 1.0075)
+            if i.size[1]<150: i.rescale(1.002, 1.0105)
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: sys.exit()
+            if event.type == pygame.QUIT: print("Window was closed..."); pygame.quit(); sys.exit()
+            if event.type == pygame.VIDEORESIZE:
+                time.sleep(0.1)
+                global display_size    
+                prev_size=display_size
+                display_size=pygame.display.get_surface().get_size()
+                for i in sprite_list+[background]:
+                    i.rescale((display_size[0])/(prev_size[0]), (display_size[1])/(prev_size[1]))
         pygame.display.flip()
         pygame.time.delay(int(1000/fps))
 
 #--------------------------setup--------------------------
-screen = pygame.display.set_mode(display_size)
-elements, bgcolour=(_:=eval(open(r"level.cfg").read()))[1:], _[0] #unpack and assign level configurations
+elements, bgcolour, background=0, (55, 55, 55), Element(size_tuple=(0, 0))
+try:
+    elements=(_:=eval((g:=open(r"level.cfg")).read()))["elements"] #unpack and assign level configurations
+    bgcolour=_["bgcolour"]
+    background=_["background"]
+except:
+    pass
+finally:
+    g.close()
+    print(elements, bgcolour, background)
 
 #------------------------main line------------------------
-main_loop(elements, bgcolour)
+main_loop(elements, bgcolour, background)
 input("Press Enter to exit the script...")

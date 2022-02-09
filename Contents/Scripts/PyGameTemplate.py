@@ -1,5 +1,5 @@
 #-------------------------modules-------------------------
-import os, random, time, sys, math, cmath, pygame
+import os, random, time, sys, math, cmath, pygame, numpy as np
 pygame.init(); os.system("cls"); print("pygame 2.6.9 (SDL 2.0.22, Python 3.11.5)")
 display_size=list(pygame.display.get_desktop_sizes()[0])
 display_size[1]-=70
@@ -61,15 +61,17 @@ class Position:
         "" #a function to move the origin to the middle of the screen
 
 class Element(pygame.sprite.Sprite):
-    def __init__(self, coords=(0, 0), paths_to_assets=getTarget("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, sprite_num=1):
+    def __init__(self, coords=(0, 0), paths_to_assets=getTarget("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, name="generic", sprite_num=1):
         super().__init__()
+        self.name=name
         self.position=coords
-        self.base=[pygame.image.load(x) for x in list(paths_to_assets)]
-        self.size=size_tuple
+        self.base=[pygame.image.load(x) for x in (paths_to_assets if type(paths_to_assets)!=str else [paths_to_assets])]
         self.rotation=degrees_of_rotation
         self.sprite_num=sprite_num
+        self.size=size_tuple
         if size_tuple=="":
             self.size=self.base[sprite_num-1].get_size()
+        self.true_size=self.size
         self.icon=pygame.transform.rotate(pygame.transform.scale(self.base[self.sprite_num-1], self.size), self.rotation)
         screen.blit(self.icon, cartesian(self.position))
         "" #a function that is essential to the class, defining initial attributes.
@@ -103,7 +105,7 @@ class Element(pygame.sprite.Sprite):
         self.reinit()
         "" #a function that sets the rotation of the element, then updates its icon
 
-    def resize(self, new_size=(75, 75), relative=False):
+    def resize(self, new_size=(75, 75), relative=False, true_size=False):
         if relative: #if size change is based on current size
             if (self.size[0]+new_size[0])>0 and (self.size[1]+new_size[1])>0: #if both new sizes are valid
                 self.size=self.size[0]+new_size[0], self.size[1]+new_size[1] #change sizes
@@ -111,16 +113,17 @@ class Element(pygame.sprite.Sprite):
                 raise ValueError("Size must be positive!") #error
         elif new_size[1]>0 and new_size[0]>0: #if not relative, and both sizes are valid
             self.size=new_size #change sizes
+            if true_size: self.true_size=new_size
         else:
             raise ValueError("Size must be positive!")
         self.reinit()
         "" #a function that changes the size attribute of the element, then updates its icon.
 
-    def rescale(self, scaleX, scaleY=-100):
+    def rescale(self, scaleX, scaleY=-100, true=True):
         if scaleY==-100 and scaleX>0: #if scaleY has not been specified 
             scaleY=scaleX #use common ratio to scale
-        if scaleX>0: #if scaleY was specified 
-            self.size=self.size[0]*scaleX, self.size[1]*scaleY
+        if scaleX>0: #if scaleY was specified
+            self.resize((self.size[0]*scaleX, self.size[1]*scaleY), true_size=true)
             self.reinit()
         else: #if scaleX was invalid
             raise ValueError("Size must be positive!")

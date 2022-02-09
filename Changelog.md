@@ -45,3 +45,6 @@ Though not directly related to this project, I have made several concepts that m
 ### 2022/02/03
 - I implemented a solution to the sine wave stuttering, using a subroutine `to_multiple()`, which rounds a number to a multiple of another number, in this case to the period of the sine wave function.
   - The duration is rounded, eliminating the incomplete periods problem. Since the sine waves have a high frequency, the change in duration is negligible.
+
+### 2022/02/09
+- 
