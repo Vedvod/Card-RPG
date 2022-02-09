@@ -46,5 +46,11 @@ Though not directly related to this project, I have made several concepts that m
 - I implemented a solution to the sine wave stuttering, using a subroutine `to_multiple()`, which rounds a number to a multiple of another number, in this case to the period of the sine wave function.
   - The duration is rounded, eliminating the incomplete periods problem. Since the sine waves have a high frequency, the change in duration is negligible.
 
+### 2022/02/08
+- I did further work on the music creation subproject, making a script that converts an input tuple into a WAVE file.   - This was used to create reditions of Star Spangled Banner using the three variants. 
+  - This will possibly allow me to add user interaction to this process, maybe eventually allowing the user to make their own music in the game.
+
 ### 2022/02/09
-- 
+- Returned to working on the pygame visual elements.
+
+### 2022/02/10
