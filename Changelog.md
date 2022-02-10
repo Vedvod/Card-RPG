@@ -1,5 +1,5 @@
 ﻿# Card-RPG
-This is my SDD HSC Major project. As of now (26th December, 2021), I am unsure of the direction that I wish to take this project in. I will likely have a greater idea of this direction as the development of generic tools progresses.
+This is my SDD HSC Major project. As of now (10-02-2022), I am unsure of the direction that I wish to take this project in. I will likely have a greater idea of this direction as the development of generic tools progresses.
 
 # Changelog
 ## Pre-Alpha: Setting up files
@@ -47,10 +47,16 @@ Though not directly related to this project, I have made several concepts that m
   - The duration is rounded, eliminating the incomplete periods problem. Since the sine waves have a high frequency, the change in duration is negligible.
 
 ### 2022/02/08
-- I did further work on the music creation subproject, making a script that converts an input tuple into a WAVE file.   - This was used to create reditions of Star Spangled Banner using the three variants. 
+- I did further work on the music creation concept, making a script that converts an input tuple into a WAVE file.   - This was used to create reditions of Star Spangled Banner using the three variants. 
   - This will possibly allow me to add user interaction to this process, maybe eventually allowing the user to make their own music in the game.
 
 ### 2022/02/09
-- Returned to working on the pygame visual elements.
+- I returned to working on the pygame visual elements.
+  - Made the game window resizable.
+  - Attempted to made the elements scale with the screen.
+    - Had difficulties with this, the elements all scale to the wrong size.
+  - Made a significant change to the level config file format, changing from a list of elements to a dictionary
+    - The keys of the dictionary represent the different aspects of the level, as well as allowing hidden debug entries.
 
 ### 2022/02/10
+- I improved upon the graphing in the "luck-based" concept, adding a matplotlib pyplot graph to better visualise the distribution. 
