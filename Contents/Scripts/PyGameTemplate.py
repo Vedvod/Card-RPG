@@ -2,8 +2,8 @@
 import os, random, time, sys, math, cmath, pygame, numpy as np
 pygame.init(); os.system("cls"); print("pygame 2.6.9 (SDL 2.0.22, Python 3.11.5)")
 display_size=list(pygame.display.get_desktop_sizes()[0])
-display_size[1]-=70
-#screen = pygame.display.set_mode(display_size)
+display_size[1]=round(display_size[1]*0.927083333)
+screen = pygame.display.set_mode((50, 50))
 
 #-----------------------function(s)-----------------------
 def getTarget(lnk_file):
@@ -44,9 +44,11 @@ def project(vector_1, vector_2):
     return projection
     "" #a basic vector projection function
 
-def cartesian(coords):
+def cartesian(coords, reverse=False):
     w, h = pygame.display.get_surface().get_size() #find the size of the screen
-    return (coords[0]+w/2, coords[1]+h/2) #use width/2 and height/2 as the origin, rather than the top left
+    if reverse: 
+        return coords[0]+w/2, h/2-coords[1]
+    return coords[0]-w/2, h/2-coords[1] #use width/2 and height/2 as the origin, rather than the top left
     "" #a function to move the origin to the middle of the screen
 
 #-------------------------classes-------------------------
@@ -76,10 +78,10 @@ class Element(pygame.sprite.Sprite):
         screen.blit(self.icon, cartesian(self.position))
         "" #a function that is essential to the class, defining initial attributes.
 
-    def place(self, coords="much too late"): 
+    def place(self, coords="much too late", SURF=screen): 
         if coords=="much too late": #if coordinates not specified
             coords=Position(self.position).cartesian() #use Element's stored coordinates
-        screen.blit(self.icon, (coords.x-pygame.Surface.get_size(self.icon)[0]/2, coords.y-pygame.Surface.get_size(self.icon)[1]/2)) #place element using cartesian coordinates
+        SURF.blit(self.icon, (coords.x-pygame.Surface.get_size(self.icon)[0]/2, coords.y-pygame.Surface.get_size(self.icon)[1]/2)) #place element using cartesian coordinates
         "" #a function that takes a cartesian coordinate input (i.e. (0, 0) is centering object on center of screen), then converts it to pygame coordinates.
     
     def move(self, x_shift=0, y_shift=0): 
@@ -158,6 +160,6 @@ class Player(Element, Timer):
         self.go_to((x+xi, y+yi), speed)
         self.place()
 
-#print(base_change(, 2))
 if os.path.basename(__file__)=="PyGameTemplate.py":
+    pygame.quit()
     input("Press Enter to exit the script...")
