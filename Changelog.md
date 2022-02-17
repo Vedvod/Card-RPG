@@ -60,3 +60,7 @@ Though not directly related to this project, I have made several concepts that m
 
 ### 2022/02/10
 - I improved upon the graphing in the "luck-based" concept, adding a matplotlib pyplot graph to better visualise the distribution. 
+
+### 2022/02/15
+- I decided to leave the pygame visuals alone for now, since I was not making much progress. I will be focusing more on the logic, with text-based visuals as a placeholder. 
+- I decided with certainty that I will be making an Uno variant game.
