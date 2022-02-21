@@ -3,3 +3,5 @@ cd "C:\Users\vedvo\Documents\GitHub\Card-RPG\Contents\Scripts" & REM this change
 echo Loading Game...
 REM timeout /t 10
 cls & py "C:\Users\vedvo\Documents\GitHub\Card-RPG\Contents\Scripts\main.py"
+
+pause
