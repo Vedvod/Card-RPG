@@ -50,6 +50,7 @@ Though not directly related to this project, I have made several concepts that m
 - I did further work on the music creation concept, making a script that converts an input tuple into a WAVE file.   - This was used to create reditions of Star Spangled Banner using the three variants. 
   - This will possibly allow me to add user interaction to this process, maybe eventually allowing the user to make their own music in the game.
 
+## Alpha 2: Resizing and spacial mapping
 ### 2022/02/09
 - I returned to working on the pygame visual elements.
   - Made the game window resizable.
@@ -61,6 +62,10 @@ Though not directly related to this project, I have made several concepts that m
 ### 2022/02/10
 - I improved upon the graphing in the "luck-based" concept, adding a matplotlib pyplot graph to better visualise the distribution. 
 
+##Alpha 3: Text-based UNO base concept
 ### 2022/02/15
 - I decided to leave the pygame visuals alone for now, since I was not making much progress. I will be focusing more on the logic, with text-based visuals as a placeholder. 
 - I decided with certainty that I will be making an Uno variant game.
+
+### 2022/02/21
+- I 

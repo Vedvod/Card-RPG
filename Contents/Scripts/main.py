@@ -81,8 +81,9 @@ class Player:
         return True
 
     def turn(self, game, mod):
+        was_valid=0
         print(mod)
-        draw_amount=1
+        draw_amount=0
         val=0
         print("Hand:", self.show_hand())
         if not mod==0:
@@ -92,29 +93,54 @@ class Player:
                 case 11: #draw two
                     print("Draw, or play another draw card.")
                     draw_amount+=mod[1]-1
+                    while not was_valid:
+                        try:
+                            if (entered:=input("What number card to play? ")).lower()=="draw":
+                                self.draw(game.deck, True, draw_amount)
+                                was_valid=1
+                                return False, 0
+                    
+                            elif (card_to_play:=int(entered)-1) in range(0, len(self.hand)):
+                                if ((self.hand[card_to_play].value==11) or (self.hand[card_to_play].suit=="W" and self.hand[card_to_play].value==1)):
+                                    was_valid=1
+                                    game.top=self.hand.pop(card_to_play)
+                                    continue
+                                else:
+                                    print(f"You must play +2 or +4\n")
+                        except:
+                            print(f"Invalid input! Please enter an integer between 1 and {len(self.hand)}.\n")
+                    input(game.top.format())
+
+                        
                 case 12: #skip
                     input("Your turn was skipped...")
                     return False, 0
+
         try:
-            was_valid=0
             while not was_valid:
-                if (entered:=input("What number card to play? ")).lower()=="draw":
-                    self.draw(game.deck, True, draw_amount)
+                if (entered:=input("What number card to play? "))=="add":
+                    input("What card to add?")
+                elif entered.lower()=="draw":
+                    self.draw(game.deck, True)
                     was_valid=1
                     return False, 0
                 assert (card_to_play:=int(entered)-1) in range(0, len(self.hand))
                 if debug: print(self.hand[card_to_play].format())
-                if mod==11:
-                    was_valid=(card_to_play.value==11) or card_to_play.suit=="W" and card_to_play.value==1
-                    continue
                 was_valid = self.play(game, card_to_play)           
         except:
             print(f"Invalid input! Please enter an integer between 1 and {len(self.hand)}.\n")
             return self.turn(game, mod)
+        #except:
+            #input("something went wrong...")
+
+        if (val:=game.top.value) > 9: #a power card!
+            print("Action!")
+            if val==11:
+                val=11, draw_amount+2
 
         if game.top.colour=="W": #a wild card
             if game.top.value==1:
-                val=11, 4
+                val=11, draw_amount+4
             print(game.top.value, UnoCard.power_dict[game.top.value])
             was_valid=0
             while not was_valid:
@@ -125,21 +151,6 @@ class Player:
                 print("The colour must be R, G, B, or Y!\n")
             game.top.colour=answer
             game.top.value=21
-
-        elif (val:=game.top.value) > 9: #a power card!
-            print("Action!")
-            if val==11:
-                val=11, 2
-            #match val:
-            #    case 10:
-            #        print("re") #reverse
-            #    case 11:
-            #        print("+2") #draw two
-            #    case 12:
-            #        print("sk") #skip
-            #    case _:
-            #        input(ValueError("you really fucked up somehow..."))
-            #input()
 
         if len(self.hand)==0:
             return True, val
@@ -169,7 +180,7 @@ class Game:
         i=-1
         act=0
         while not game_over:
-            os.system("cls")
+            if not debug: os.system("cls")
             i+=1
             if i==len(self.players):
                 i=0
@@ -182,7 +193,7 @@ class Game:
 
 #------------------------main line------------------------
 temp, deck={}, []
-temp[0]=[[UnoCard(c, math.ceil(n/2)) for c in "RGBY"] for n in range(19)]
+#temp[0]=[[UnoCard(c, math.ceil(n/2)) for c in "RGBY"] for n in range(19)]
 temp[1]=[[UnoCard(c, math.ceil(n/2)) for c in "RGBY"] for n in range(21, 25)]
 temp[2]=[[UnoCard("W", math.ceil(n/4)) for n in range(-3, 5)]]
 for i in temp: 
@@ -191,7 +202,7 @@ for i in temp:
 
 for x in range(random.randint(1, 10)):
     random.shuffle(deck)
-game=Game((ved:=Player("ved"), g:=Player("tan")), deck)
+game=Game((ved:=Player("ved"), g:=Player("tan"), e:=Player("sine")), deck)
 if debug: print(" | ".join([i.format() for i in game.deck]))
 
 if debug: print(f"\n".join([f"{game.players[i].name}: {game.players[i].show_hand()}" for i in range(2)]))
