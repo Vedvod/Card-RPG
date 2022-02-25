@@ -6,7 +6,7 @@ display_size[1]=round(display_size[1]*0.927083333)
 screen = pygame.display.set_mode((50, 50))
 
 #-----------------------function(s)-----------------------
-def getTarget(lnk_file):
+def get_target(lnk_file):
     lnk_file = open(lnk_file, "rb").read() #open the file in byte read mode
     keepGoing, track, final=1, 0, ""
     for n, i in enumerate(lnk_file): #iterate through each byte
@@ -24,12 +24,10 @@ def getTarget(lnk_file):
     "" #finds the location that a shortcut file (.lnk) leads to
 
 def play(location): #MAYBE REPLACE WITH PYGAME.MIXER???
-    from playsound import playsound #
-    import threading
-    def thread_funct(locate):
-        playsound(locate)
-    x = threading.Thread(target=thread_funct, args=(location,), daemon=True)
-    x.start()
+    pygame.mixer.init()
+    x=pygame.mixer.Sound(location)
+    x.play()
+    return x
     "" #play a sound from file
 
 def scalar(vector):
@@ -63,11 +61,12 @@ class Position:
         "" #a function to move the origin to the middle of the screen
 
 class Element(pygame.sprite.Sprite):
-    def __init__(self, coords=(0, 0), paths_to_assets=getTarget("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, name="generic", sprite_num=1):
+    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, name="generic", sprite_num=1):
         super().__init__()
         self.name=name
         self.position=coords
         self.base=[pygame.image.load(x) for x in (paths_to_assets if type(paths_to_assets)!=str else [paths_to_assets])]
+        print(self.base)
         self.rotation=degrees_of_rotation
         self.sprite_num=sprite_num
         self.size=size_tuple
@@ -91,6 +90,10 @@ class Element(pygame.sprite.Sprite):
     def sprite(self): 
         return self.base[self.sprite_num-1]
         "" #a convenient shorthand for the currently toggled display sprite.
+
+    def anim(self):
+        self.sprite_num = (self.sprite_num+1 if self.sprite_num<len(self.base) else 1)
+        self.reinit()
 
     def reinit(self):
         self.icon=pygame.transform.rotate(pygame.transform.scale(self.sprite(), self.size), self.rotation)
@@ -141,12 +144,12 @@ class Timer:
         self.start_time=time.time()
 
 class Player(Element, Timer):
-    def __init__(self, coords=(0, 0), paths_to_assets=getTarget("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, sprite_num=1):
+    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, sprite_num=1):
         super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num)
+        Timer.__init__(self)
 
-    def controls(self, speed=50):
-        inital_pos=Position(self.coords)
-        xi, yi = self.coords
+    def controls(self, speed=50, wrap=False):
+        xi, yi = self.position
         x, y = 0, 0
         pressed = pygame.key.get_pressed()
         if pressed[pygame.K_LEFT]:
@@ -157,7 +160,18 @@ class Player(Element, Timer):
             y-=speed
         if pressed[pygame.K_UP]:
             y+=speed
-        self.go_to((x+xi, y+yi), speed)
+        self.move(x, -y)
+        if wrap:
+            w, h = pygame.display.get_surface().get_size()
+            if me.position[0]<-w/2:
+                print("a")
+                me.move(w-1, 0)
+            elif me.position[0]>w/2:
+                me.move(-w+1, 0)
+            if me.position[1]<-h/2:
+                me.move(0, h-1)
+            elif me.position[1]>h/2:
+                me.move(0, -h+1)
         self.place()
 
 if os.path.basename(__file__)=="PyGameTemplate.py":
