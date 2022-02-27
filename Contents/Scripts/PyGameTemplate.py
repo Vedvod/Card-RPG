@@ -60,13 +60,21 @@ class Position:
         return Position((self.x+w/2, self.y+h/2)) #use width/2 and height/2 as the origin, rather than the top left
         "" #a function to move the origin to the middle of the screen
 
-class Element(pygame.sprite.Sprite):
+class Timer:
+    def __init__(self):
+        self.start_time=time.time()
+    def time(self):
+        return time.time()-self.start_time
+    def reset(self):
+        self.start_time=time.time()
+
+class Element(pygame.sprite.Sprite, Timer):
     def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, name="generic", sprite_num=1):
         super().__init__()
+        Timer.__init__(self)
         self.name=name
         self.position=coords
         self.base=[pygame.image.load(x) for x in (paths_to_assets if type(paths_to_assets)!=str else [paths_to_assets])]
-        print(self.base)
         self.rotation=degrees_of_rotation
         self.sprite_num=sprite_num
         self.size=size_tuple
@@ -83,6 +91,13 @@ class Element(pygame.sprite.Sprite):
         SURF.blit(self.icon, (coords.x-pygame.Surface.get_size(self.icon)[0]/2, coords.y-pygame.Surface.get_size(self.icon)[1]/2)) #place element using cartesian coordinates
         "" #a function that takes a cartesian coordinate input (i.e. (0, 0) is centering object on center of screen), then converts it to pygame coordinates.
     
+    def rect(self):
+        a, b = cartesian((self.position[0]-self.size[0]/2, self.position[1]+self.size[1]/2), True)
+        c, d = cartesian((self.position[0]+self.size[0]/2, self.position[1]-self.size[1]/2), True)
+        a, b, c, d = [int(x) for x in (a, b, c, d)]
+        if debug: print(a, b, c, d)
+        return np.linspace(a, c, 5*(c-a)+1), np.linspace(b, d, 5*(d-b)+1)
+
     def move(self, x_shift=0, y_shift=0): 
         self.position=self.position[0]+x_shift, self.position[1]+y_shift #add each shift
         "" #a function to move the element
@@ -138,18 +153,10 @@ class Element(pygame.sprite.Sprite):
         "" #a function that changes the height and width of an element by a common ratio, then updates its icon.
     "" #the base class for all elements
 
-class Timer:
-    def __init__(self):
-        self.start_time=time.time()
-    def time(self):
-        return time.time()-self.start_time
-    def reset(self):
-        self.start_time=time.time()
-
-class Player(Element, Timer):
+class Player(Element):
     def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, sprite_num=1):
         super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num)
-        Timer.__init__(self)
+        self.time=Timer()
 
     def controls(self, speed=50, wrap=False):
         xi, yi = self.position
@@ -168,7 +175,6 @@ class Player(Element, Timer):
         if wrap:
             w, h = pygame.display.get_surface().get_size()
             if me.position[0]<-w/2:
-                print("a")
                 me.move(w-1, 0)
             elif me.position[0]>w/2:
                 me.move(-w+1, 0)
@@ -179,5 +185,8 @@ class Player(Element, Timer):
         self.place()
 
 if os.path.basename(__file__)=="PyGameTemplate.py":
+    me=Player(coords=(0, 30), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _))
+    trombone=play(get_target("GameAssets.lnk")+"\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
     pygame.quit()
+    print("Success")
     input("Press Enter to exit the script...")
