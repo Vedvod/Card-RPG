@@ -87,6 +87,9 @@ class Element(pygame.sprite.Sprite):
         self.position=self.position[0]+x_shift, self.position[1]+y_shift #add each shift
         "" #a function to move the element
 
+    def circle_movement(self, direction, speed):
+        return project(((0, 0), direction), ((0, 0), (0, speed)))
+
     def sprite(self): 
         return self.base[self.sprite_num-1]
         "" #a convenient shorthand for the currently toggled display sprite.
@@ -160,7 +163,8 @@ class Player(Element, Timer):
             y-=speed
         if pressed[pygame.K_UP]:
             y+=speed
-        self.move(x, -y)
+        _=self.circle_movement((x, -y), speed)[1]
+        if (x, y)!=(0, 0): self.move(_[0], _[1])
         if wrap:
             w, h = pygame.display.get_surface().get_size()
             if me.position[0]<-w/2:
