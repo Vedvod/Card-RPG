@@ -1,4 +1,5 @@
 debug=0
+show_hitbox=0
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame
 x, y = (0, 30); os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y) #sets the position of the screen
@@ -11,7 +12,7 @@ for i in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
         break #if the file is opened
     except:
         pass #function to load template from anywhere on directory path
-screen = pygame.display.set_mode(display_size, pygame.RESIZABLE, pygame.SCALED) #set the pygame screen
+screen = pygame.display.set_mode((int(display_size[0]/1.5), int(display_size[1]/1.5)), pygame.RESIZABLE, pygame.SCALED) #set the pygame screen
 
 #-----------------------function(s)-----------------------
 found=lambda x: x in found_keys #shorthand for brevity
@@ -42,6 +43,14 @@ def con(self, speed=50): #temporary controls function, almost same as template o
     elif self.position[1]>h/2: #if at bottom
         self.move(0, -h+1) #move to top
     self.place() #place the player
+    if show_hitbox:
+        a, b = (self.rect()[0][0], self.rect()[1][0])
+        c, d = (self.rect()[0][-1], self.rect()[1][-1])
+        Element((a, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+        Element((c, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+        Element((c, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+        Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+
 Player.controls=con
 #-------------------------classes-------------------------
 class Key(Element, pygame.sprite.Sprite):
@@ -62,14 +71,21 @@ class Key(Element, pygame.sprite.Sprite):
         self.kill()
         
     def rect_check(self):
+        if show_hitbox:
+            a, b = (self.rect()[0][0], self.rect()[1][0])
+            c, d = (self.rect()[0][-1], self.rect()[1][-1])
+            Element((a, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+            Element((c, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+            Element((c, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+            Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
         if set(self.rect()[0])&set(self.player.rect()[0]) and set(self.rect()[1])&set(self.player.rect()[1]): self.collide()
 
 #--------------------------setup--------------------------
 found_keys="A"
-the_player=Player(coords=(0, 30), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player")
+the_player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player")
 W=Key(the_player, coords=(100, 300), key_name="w", name="w_key")
 D=Key(the_player, coords=(0, -153), key_name="d", name="d_key")
-S=Key(the_player, coords=(-253, 5), key_name="s", name="s_key")
+S=Key(the_player, coords=(-253, 0), key_name="s", name="s_key")
 trombone=play(get_target("GameAssets.lnk")+"\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
 fps=60
 

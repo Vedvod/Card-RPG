@@ -91,8 +91,9 @@ class Element(pygame.sprite.Sprite, Timer):
         if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
             self.click_timer.reset()
             mouse_coords=pygame.mouse.get_pos()
-            print(int(self.rect()[0][0]), int(self.rect()[0][-1]))
+            #print(int(self.rect()[0][0]), int(self.rect()[0][-1]))
             mc=cartesian(mouse_coords)
+            print(mc)
             #print(f"name: {self.name}, mouse coords: {mc}, player rect x range: {int(self.rect()[0][0]), int(self.rect()[0][-1])}, mouse coords in player x: {mc[0] in range(int(self.rect()[0][0]), int(self.rect()[0][-1]))}, mouse coords in player y: {mc[1] in self.rect()[1]}")
             if mc[0] in self.rect()[0] and mc[1] in self.rect()[1]:
                 print("aaa")
@@ -107,8 +108,8 @@ class Element(pygame.sprite.Sprite, Timer):
         "" #a function that takes a cartesian coordinate input (i.e. (0, 0) is centering object on center of screen), then converts it to pygame coordinates.
     
     def rect(self):
-        a, b = (self.position[0]-self.size[0]/2, self.position[1]+self.size[1]/2)
-        c, d = (self.position[0]+self.size[0]/2, self.position[1]-self.size[1]/2)
+        a, b = (self.position[0], self.position[1]+self.size[1])
+        c, d = (self.position[0]+self.size[0], self.position[1])
         a, b, c, d = [int(x) for x in (a, b, c, d)]
         #print(f"name: {self.name}, Top left: {(a, b)}, Bottom Right: {(c, d)}")
         if debug: print(a, b, c, d)
@@ -202,6 +203,7 @@ class Player(Element):
             elif self.position[1]>h/2: #if at bottom
                 self.move(0, -h+1) #move to top
         self.place() #place the player
+
 
 if os.path.basename(__file__)=="PyGameTemplate.py":
     #me=Player(coords=(0, 30), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _))
