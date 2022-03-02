@@ -74,7 +74,7 @@ class Element(pygame.sprite.Sprite, Timer):
         self.click_timer = Timer()
         self.anim_timer=Timer()
         self.name=name
-        self.position=coords[0], coords[1]
+        self.position=coords[0], -coords[1]
         self.base=[pygame.image.load(x) for x in (paths_to_assets if type(paths_to_assets)!=str else [paths_to_assets])]
         self.rotation=degrees_of_rotation
         self.sprite_num=sprite_num

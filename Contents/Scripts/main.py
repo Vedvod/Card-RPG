@@ -12,7 +12,8 @@ for i in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
         break #if the file is opened
     except:
         pass #function to load template from anywhere on directory path
-screen = pygame.display.set_mode((int(display_size[0]/1.5), int(display_size[1]/1.5)), pygame.RESIZABLE, pygame.SCALED) #set the pygame screen
+s=1.5
+screen = pygame.display.set_mode((int(display_size[0]/s), int(display_size[1]/s)), pygame.RESIZABLE, pygame.SCALED) #set the pygame screen
 
 #-----------------------function(s)-----------------------
 found=lambda x: x in found_keys #shorthand for brevity
@@ -84,7 +85,7 @@ class Key(Element, pygame.sprite.Sprite):
 found_keys="A"
 the_player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player")
 W=Key(the_player, coords=(100, 300), key_name="w", name="w_key")
-D=Key(the_player, coords=(0, -153), key_name="d", name="d_key")
+D=Key(the_player, coords=(0, 153), key_name="d", name="d_key")
 S=Key(the_player, coords=(-253, 0), key_name="s", name="s_key")
 trombone=play(get_target("GameAssets.lnk")+"\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
 fps=60
