@@ -108,11 +108,10 @@ class Element(pygame.sprite.Sprite, Timer):
         "" #a function that takes a cartesian coordinate input (i.e. (0, 0) is centering object on center of screen), then converts it to pygame coordinates.
     
     def rect(self):
-        a, b = (self.position[0], self.position[1]+self.size[1])
-        c, d = (self.position[0]+self.size[0], self.position[1])
+        a, d = (self.position[0], -(self.position[1]+self.size[1]))
+        c, b = (self.position[0]+self.size[1], -(self.position[1]))
         a, b, c, d = [int(x) for x in (a, b, c, d)]
-        #print(f"name: {self.name}, Top left: {(a, b)}, Bottom Right: {(c, d)}")
-        if debug: print(a, b, c, d)
+        if debug[1]: print(f"N: {self.name}, Pos: {self.position} Top left: {(a, b)}, Bottom Right: {(c, d)}"); print(a, b, c, d)
         return np.linspace(a, c, 5*(c-a)+1), np.linspace(b, d, 5*(b-d)+1)
 
     def move(self, x_shift=0, y_shift=0): 

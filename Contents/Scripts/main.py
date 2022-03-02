@@ -1,5 +1,15 @@
-debug=0
-show_hitbox=0
+debug=[
+   0,
+    0, 0,
+    0,
+    0]
+"""
+debug dictionary:
+0: general stuff idk
+1: rects
+2: hitboxes
+"""
+
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame
 x, y = (0, 30); os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y) #sets the position of the screen
@@ -7,7 +17,7 @@ for i in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
     try: a.append(i) #move onto the next step
     except: a=[i] #if i is first step
     try:
-        if debug: print("/".join(a)+r"PyGameTemplate.py") #debug message to ensure the dir building is correct
+        if debug[0]: print("/".join(a)+r"PyGameTemplate.py") #debug[0] message to ensure the dir building is correct
         exec(open("/".join(a)+r"PyGameTemplate.py").read()) #attempt to locate template file at current dir level
         break #if the file is opened
     except:
@@ -44,7 +54,7 @@ def con(self, speed=50): #temporary controls function, almost same as template o
     elif self.position[1]>h/2: #if at bottom
         self.move(0, -h+1) #move to top
     self.place() #place the player
-    if show_hitbox:
+    if debug[2]:
         a, b = (self.rect()[0][0], self.rect()[1][0])
         c, d = (self.rect()[0][-1], self.rect()[1][-1])
         Element((a, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
@@ -66,13 +76,13 @@ class Key(Element, pygame.sprite.Sprite):
         elements.remove(self)
 
     def collide(self):
-        if debug: print("collided")
+        if debug[0]: print("collided")
         global found_keys
         found_keys+=self.key
         self.kill()
         
     def rect_check(self):
-        if show_hitbox:
+        if debug[2]:
             a, b = (self.rect()[0][0], self.rect()[1][0])
             c, d = (self.rect()[0][-1], self.rect()[1][-1])
             Element((a, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
@@ -83,7 +93,7 @@ class Key(Element, pygame.sprite.Sprite):
 
 #--------------------------setup--------------------------
 found_keys="A"
-the_player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player")
+the_player=Player(coords=(0, 20), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player")
 W=Key(the_player, coords=(100, 300), key_name="w", name="w_key")
 D=Key(the_player, coords=(0, 153), key_name="d", name="d_key")
 S=Key(the_player, coords=(-253, 0), key_name="s", name="s_key")
@@ -95,19 +105,20 @@ def anim_loop():
     pass
 
 def main_loop(list_of_elements, i):
-    #print(f"frame {i}")
+    t=Timer()
+    if {i for i in debug}&{True, 1}: print(f"frame {i}")
     screen.fill((132, 30, 95))
     for a in list_of_elements:
-        #print(a.name)
+        if debug[1]: print(a.name)
         a.place()
         a.rect_check()
-    #print("player")
+    if debug[1]: print("player")
     the_player.check_clicked()
     the_player.controls(the_player.size[0]/10)
     the_player.anim()
     pygame.display.flip()
-    #print(f"frame {i} end\n")
-    pygame.time.delay(int(1000/fps))
+    if {i for i in debug}&{True, 1}: print(f"frame {i} end\n")
+    pygame.time.delay(int(1000/fps - t.time()))
     for event in pygame.event.get():
         if event.type == pygame.QUIT: 
             pygame.display.quit(); return True
@@ -118,7 +129,7 @@ i=0
 while not ended:
     ended=main_loop(elements, i)
     i+=1
-trombone.play()
-time.sleep(3)
+trombone.play(-1)
+time.sleep(3.5)
 input("Press Enter to exit the script...")
 pygame.quit()
