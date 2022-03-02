@@ -71,9 +71,10 @@ class Timer:
 class Element(pygame.sprite.Sprite, Timer):
     def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, name="generic", sprite_num=1):
         super().__init__()
-        Timer.__init__(self)
+        self.click_timer = Timer()
+        self.anim_timer=Timer()
         self.name=name
-        self.position=coords
+        self.position=coords[0], coords[1]
         self.base=[pygame.image.load(x) for x in (paths_to_assets if type(paths_to_assets)!=str else [paths_to_assets])]
         self.rotation=degrees_of_rotation
         self.sprite_num=sprite_num
@@ -85,18 +86,33 @@ class Element(pygame.sprite.Sprite, Timer):
         screen.blit(self.icon, cartesian(self.position))
         "" #a function that is essential to the class, defining initial attributes.
 
+    def check_clicked(self):
+        #print(self.click_timer.time())
+        if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
+            self.click_timer.reset()
+            mouse_coords=pygame.mouse.get_pos()
+            print(int(self.rect()[0][0]), int(self.rect()[0][-1]))
+            mc=cartesian(mouse_coords)
+            #print(f"name: {self.name}, mouse coords: {mc}, player rect x range: {int(self.rect()[0][0]), int(self.rect()[0][-1])}, mouse coords in player x: {mc[0] in range(int(self.rect()[0][0]), int(self.rect()[0][-1]))}, mouse coords in player y: {mc[1] in self.rect()[1]}")
+            if mc[0] in self.rect()[0] and mc[1] in self.rect()[1]:
+                print("aaa")
+
     def place(self, coords="much too late", SURF=screen): 
         if coords=="much too late": #if coordinates not specified
             coords=Position(self.position).cartesian() #use Element's stored coordinates
-        SURF.blit(self.icon, (coords.x-pygame.Surface.get_size(self.icon)[0]/2, coords.y-pygame.Surface.get_size(self.icon)[1]/2)) #place element using cartesian coordinates
+            #print(coords.y)
+            #print(f"name: {self.name}, x: {coords.x}, y: {coords.y}")
+   
+        SURF.blit(self.icon, (coords.x, coords.y)) #place element using cartesian coordinates
         "" #a function that takes a cartesian coordinate input (i.e. (0, 0) is centering object on center of screen), then converts it to pygame coordinates.
     
     def rect(self):
-        a, b = cartesian((self.position[0]-self.size[0]/2, self.position[1]+self.size[1]/2), True)
-        c, d = cartesian((self.position[0]+self.size[0]/2, self.position[1]-self.size[1]/2), True)
+        a, b = (self.position[0]-self.size[0]/2, self.position[1]+self.size[1]/2)
+        c, d = (self.position[0]+self.size[0]/2, self.position[1]-self.size[1]/2)
         a, b, c, d = [int(x) for x in (a, b, c, d)]
+        #print(f"name: {self.name}, Top left: {(a, b)}, Bottom Right: {(c, d)}")
         if debug: print(a, b, c, d)
-        return np.linspace(a, c, 5*(c-a)+1), np.linspace(b, d, 5*(d-b)+1)
+        return np.linspace(a, c, 5*(c-a)+1), np.linspace(b, d, 5*(b-d)+1)
 
     def move(self, x_shift=0, y_shift=0): 
         self.position=self.position[0]+x_shift, self.position[1]+y_shift #add each shift
@@ -110,8 +126,10 @@ class Element(pygame.sprite.Sprite, Timer):
         "" #a convenient shorthand for the currently toggled display sprite.
 
     def anim(self):
-        self.sprite_num = (self.sprite_num+1 if self.sprite_num<len(self.base) else 1)
-        self.reinit()
+        if self.anim_timer.time()>=0.15:
+            self.anim_timer.reset()
+            self.sprite_num = (self.sprite_num+1 if self.sprite_num<len(self.base) else 1)
+            self.reinit()
 
     def reinit(self):
         self.icon=pygame.transform.rotate(pygame.transform.scale(self.sprite(), self.size), self.rotation)
@@ -154,38 +172,39 @@ class Element(pygame.sprite.Sprite, Timer):
     "" #the base class for all elements
 
 class Player(Element):
-    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, sprite_num=1):
+    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, sprite_num=1, name=""):
         super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num)
-        self.time=Timer()
+        self.anim_timer=Timer()
+        self.name=name
 
-    def controls(self, speed=50, wrap=False):
-        xi, yi = self.position
-        x, y = 0, 0
-        pressed = pygame.key.get_pressed()
-        if pressed[pygame.K_LEFT]:
+    pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key pressed
+    def controls(self, speed=50, wrap=False): 
+        x, y = 0, 0 #zero vector
+        if pressed("LEFT"):
             x-=speed
-        if pressed[pygame.K_RIGHT]:
+        if pressed("RIGHT"):
             x+=speed
-        if pressed[pygame.K_DOWN]:
+        if pressed("DOWN"):
             y-=speed
-        if pressed[pygame.K_UP]:
+        if pressed("UP"):
             y+=speed
-        _=self.circle_movement((x, -y), speed)[1]
-        if (x, y)!=(0, 0): self.move(_[0], _[1])
-        if wrap:
-            w, h = pygame.display.get_surface().get_size()
-            if me.position[0]<-w/2:
-                me.move(w-1, 0)
-            elif me.position[0]>w/2:
-                me.move(-w+1, 0)
-            if me.position[1]<-h/2:
-                me.move(0, h-1)
-            elif me.position[1]>h/2:
-                me.move(0, -h+1)
-        self.place()
+        #all above creates the vector in x and y
+        _=self.circle_movement((x, -y), speed)[1] #use the circle_movement function to create a vector with constant magnitude in direction of above
+        if (x, y)!=(0, 0): self.move(_[0], _[1]) #if zero vector (nothing pressed), do nothing
+        if wrap: #go around screen
+            w, h = pygame.display.get_surface().get_size() #screen size
+            if self.position[0]<-w/2: #if at left side of screen
+                self.move(w-1, 0) #move to right side
+            elif self.position[0]>w/2: #if at right side
+                self.move(-w+1, 0) #move to left side
+            if self.position[1]<-h/2: #if at top of screen
+                self.move(0, h-1) #move to bottom
+            elif self.position[1]>h/2: #if at bottom
+                self.move(0, -h+1) #move to top
+        self.place() #place the player
 
 if os.path.basename(__file__)=="PyGameTemplate.py":
-    me=Player(coords=(0, 30), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _))
+    #me=Player(coords=(0, 30), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _))
     trombone=play(get_target("GameAssets.lnk")+"\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
     pygame.quit()
     print("Success")
