@@ -1,8 +1,9 @@
 debug=[
-   0,
-    0, 0,
-    0,
-    0]
+ 1,
+ 0, 
+ 0,
+ 0,
+ 0]
 """
 debug dictionary:
 0: general stuff idk
@@ -22,7 +23,7 @@ for i in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
         break #if the file is opened
     except:
         pass #function to load template from anywhere on directory path
-s=1.5
+s=1
 screen = pygame.display.set_mode((int(display_size[0]/s), int(display_size[1]/s)), pygame.RESIZABLE, pygame.SCALED) #set the pygame screen
 
 #-----------------------function(s)-----------------------
@@ -54,7 +55,7 @@ def con(self, speed=50): #temporary controls function, almost same as template o
     elif self.position[1]>h/2: #if at bottom
         self.move(0, -h+1) #move to top
     self.place() #place the player
-    if debug[2]:
+    if debug[2]: #shows hitboxes
         a, b = (self.rect()[0][0], self.rect()[1][0])
         c, d = (self.rect()[0][-1], self.rect()[1][-1])
         Element((a, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
@@ -62,9 +63,9 @@ def con(self, speed=50): #temporary controls function, almost same as template o
         Element((c, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
         Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
 
-Player.controls=con
+Player.controls=con #override default controls with new ones
 #-------------------------classes-------------------------
-class Key(Element, pygame.sprite.Sprite):
+class Key(Element):
     def __init__(self, player=Player(), coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, name=""):
         super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation)
         self.player=player
@@ -91,14 +92,19 @@ class Key(Element, pygame.sprite.Sprite):
             Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
         if set(self.rect()[0])&set(self.player.rect()[0]) and set(self.rect()[1])&set(self.player.rect()[1]): self.collide()
 
+class PressShow(Element):
+    pass
+
 #--------------------------setup--------------------------
-found_keys="A"
-the_player=Player(coords=(0, 20), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player")
-W=Key(the_player, coords=(100, 300), key_name="w", name="w_key")
+found_keys="A" #the keys the player can use
+the_player=Player(coords=(0, 20), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
+W=Key(the_player, coords=(100, 300), key_name="w", name="w_key") 
 D=Key(the_player, coords=(0, 153), key_name="d", name="d_key")
 S=Key(the_player, coords=(-253, 0), key_name="s", name="s_key")
+#collectable keys
 trombone=play(get_target("GameAssets.lnk")+"\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
-fps=60
+#sounds
+fps=60 #framerate
 
 #------------------------main line------------------------
 def anim_loop():

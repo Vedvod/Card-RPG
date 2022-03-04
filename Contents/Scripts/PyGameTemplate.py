@@ -4,6 +4,7 @@ pygame.init(); os.system("cls"); print("pygame 2.6.9 (SDL 2.0.22, Python 3.11.5)
 display_size=list(pygame.display.get_desktop_sizes()[0])
 display_size[1]=round(display_size[1]*0.927083333)
 screen = pygame.display.set_mode((50, 50))
+prev_size=display_size
 
 #-----------------------function(s)-----------------------
 def get_target(lnk_file):
@@ -100,10 +101,14 @@ class Element(pygame.sprite.Sprite, Timer):
 
     def place(self, coords="much too late", SURF=screen): 
         if coords=="much too late": #if coordinates not specified
-            coords=Position(self.position).cartesian() #use Element's stored coordinates
-            #print(coords.y)
-            #print(f"name: {self.name}, x: {coords.x}, y: {coords.y}")
-   
+            coords=self.position #use Element's stored coordinates
+        #print((SUSZ:=pygame.display.get_surface().get_size())[0]/display_size[0], SUSZ[1]/display_size[1])
+        print(self.name, coords[0]*(SUSZ:=pygame.display.get_surface().get_size())[0]/display_size[0], coords[1]*SUSZ[1]/display_size[1])
+        coords=coords[0]*(SUSZ:=pygame.display.get_surface().get_size())[0]/display_size[0], coords[1]*SUSZ[1]/display_size[1]
+        coords=Position(coords).cartesian() 
+        global prev_size
+        self.rescale((SUSZ:=pygame.display.get_surface().get_size())[0]/prev_size[0], SUSZ[1]/prev_size[1])
+        prev_size=pygame.display.get_surface().get_size()
         SURF.blit(self.icon, (coords.x, coords.y)) #place element using cartesian coordinates
         "" #a function that takes a cartesian coordinate input (i.e. (0, 0) is centering object on center of screen), then converts it to pygame coordinates.
     
