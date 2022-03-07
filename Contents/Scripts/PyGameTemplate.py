@@ -69,7 +69,7 @@ class Timer:
     def reset(self):
         self.start_time=time.time()
 
-class Element(pygame.sprite.Sprite, Timer):
+class Element(Timer):
     def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, name="generic", sprite_num=1):
         super().__init__()
         self.click_timer = Timer()
@@ -103,7 +103,7 @@ class Element(pygame.sprite.Sprite, Timer):
         if coords=="much too late": #if coordinates not specified
             coords=self.position #use Element's stored coordinates
         #print((SUSZ:=pygame.display.get_surface().get_size())[0]/display_size[0], SUSZ[1]/display_size[1])
-        print(self.name, coords[0]*(SUSZ:=pygame.display.get_surface().get_size())[0]/display_size[0], coords[1]*SUSZ[1]/display_size[1])
+        #print(self.name, coords[0]*(SUSZ:=pygame.display.get_surface().get_size())[0]/display_size[0], coords[1]*SUSZ[1]/display_size[1])
         coords=coords[0]*(SUSZ:=pygame.display.get_surface().get_size())[0]/display_size[0], coords[1]*SUSZ[1]/display_size[1]
         coords=Position(coords).cartesian() 
         global prev_size
@@ -211,7 +211,7 @@ class Player(Element):
 
 if os.path.basename(__file__)=="PyGameTemplate.py":
     #me=Player(coords=(0, 30), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _))
-    trombone=play(get_target("GameAssets.lnk")+"\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
+    #trombone=play(get_target("GameAssets.lnk")+"\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
     pygame.quit()
     print("Success")
     input("Press Enter to exit the script...")

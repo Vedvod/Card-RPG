@@ -1,5 +1,5 @@
 debug=[
- 1,
+ 0,
  0, 
  0,
  0,
@@ -64,6 +64,54 @@ def con(self, speed=50): #temporary controls function, almost same as template o
         Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
 
 Player.controls=con #override default controls with new ones
+
+def anim_loop(list_of_elements, colour=(132, 30, 95)):
+    for i in range(frames:=100):
+        print(i/frames*100)
+        t=Timer()
+        the_player.rescale(1.00695555)
+        screen.fill((colour))
+        for a in list_of_elements:
+            a.place()
+        the_player.place()
+        the_player.anim()
+        pygame.display.flip()
+        pygame.time.delay(int(1000/fps - t.time()))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: 
+                pygame.display.quit(); return True
+
+def main_loop(list_of_elements, i, colour):
+    collect=[]
+    if {i for i in debug}&{True, 1}: print(f"frame {i}")
+    t=Timer()
+    screen.fill(colour)
+    for a in list_of_elements:
+        if debug[1]: print(a.name)
+        a.place()
+        collect.append(a.rect_check())
+    act[1]=True in collect
+    if debug[1]: print("player")
+    the_player.check_clicked()
+    the_player.controls(the_player.size[0]/10)
+    the_player.anim()
+    pygame.display.flip()
+    if {i for i in debug}&{True, 1}: print(f"{t.time()*1000} milliseconds\nframe {i} end\n")
+    pygame.time.delay(int(1000/fps - t.time()))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT: 
+            pygame.display.quit(); return True
+
+def changColor(image, color):
+    colouredImage = pygame.Surface(image.get_size())
+    colouredImage.fill(color)
+    
+    finalImage = image.copy()
+    finalImage.blit(colouredImage, (0, 0), special_flags = pygame.BLEND_MULT)
+    return finalImage
+
+loop=[main_loop, anim_loop]
+act = [0, 0]
 #-------------------------classes-------------------------
 class Key(Element):
     def __init__(self, player=Player(), coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, name=""):
@@ -90,52 +138,40 @@ class Key(Element):
             Element((c, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
             Element((c, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
             Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
-        if set(self.rect()[0])&set(self.player.rect()[0]) and set(self.rect()[1])&set(self.player.rect()[1]): self.collide()
+        if set(self.rect()[0])&set(self.player.rect()[0]) and set(self.rect()[1])&set(self.player.rect()[1]): self.collide(); return True
 
 class PressShow(Element):
     pass
 
 #--------------------------setup--------------------------
-found_keys="A" #the keys the player can use
-the_player=Player(coords=(0, 20), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
-W=Key(the_player, coords=(100, 300), key_name="w", name="w_key") 
-D=Key(the_player, coords=(0, 153), key_name="d", name="d_key")
-S=Key(the_player, coords=(-253, 0), key_name="s", name="s_key")
-#collectable keys
-trombone=play(get_target("GameAssets.lnk")+"\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
-#sounds
-fps=60 #framerate
+for i in [1]:
+    found_keys="A" #the keys the player can use
+    the_player=Player(coords=(0, 20), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
+    W=Key(the_player, coords=(100, 300), key_name="w", name="w_key") 
+    D=Key(the_player, coords=(0, 153), key_name="d", name="d_key")
+    S=Key(the_player, coords=(-253, 0), key_name="s", name="s_key")
+    #collectable keys
+    trombone=play(get_target("GameAssets.lnk")+"\sounds\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
+    back_mus=play(get_target("GameAssets.lnk")+"\sounds\quieter.wav"); back_mus.play(-1)
+    #sounds
+    fps=60 #framerate
 
 #------------------------main line------------------------
-def anim_loop():
-    pass
-
-def main_loop(list_of_elements, i):
-    t=Timer()
-    if {i for i in debug}&{True, 1}: print(f"frame {i}")
-    screen.fill((132, 30, 95))
-    for a in list_of_elements:
-        if debug[1]: print(a.name)
-        a.place()
-        a.rect_check()
-    if debug[1]: print("player")
-    the_player.check_clicked()
-    the_player.controls(the_player.size[0]/10)
-    the_player.anim()
-    pygame.display.flip()
-    if {i for i in debug}&{True, 1}: print(f"frame {i} end\n")
-    pygame.time.delay(int(1000/fps - t.time()))
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT: 
-            pygame.display.quit(); return True
-
 ended=False
 elements=[W, D, S]
 i=0
+colour=(75, 120, 30)
 while not ended:
-    ended=main_loop(elements, i)
+    ended=loop[0](elements, i, colour)
+
     i+=1
-trombone.play(-1)
+    if True in act:
+        for n in act:
+            if n:
+                loop[n](elements, colour)
+
+back_mus.stop()
+trombone.play(3)
 time.sleep(3.5)
 input("Press Enter to exit the script...")
 pygame.quit()
