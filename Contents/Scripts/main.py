@@ -1,7 +1,7 @@
 debug=[
  0,
  0, 
- 0,
+ 2,
  0,
  0]
 """
@@ -69,7 +69,7 @@ def anim_loop(list_of_elements, colour=(132, 30, 95)):
     for i in range(frames:=100):
         print(i/frames*100)
         t=Timer()
-        the_player.rescale(1.00695555)
+        the_player.rescale(1.00532039)
         screen.fill((colour))
         for a in list_of_elements:
             a.place()
@@ -160,7 +160,7 @@ for i in [1]:
 ended=False
 elements=[W, D, S]
 i=0
-colour=(75, 120, 30)
+colour=(132, 30, 95)
 while not ended:
     ended=loop[0](elements, i, colour)
 
