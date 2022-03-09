@@ -1,7 +1,7 @@
 debug=[
  0,
  0, 
- 2,
+ 0,
  0,
  0]
 """
@@ -14,9 +14,9 @@ debug dictionary:
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame
 x, y = (0, 30); os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y) #sets the position of the screen
-for i in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
-    try: a.append(i) #move onto the next step
-    except: a=[i] #if i is first step
+for c in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
+    try: a.append(c) #move onto the next step
+    except: a=[c] #if i is first step
     try:
         if debug[0]: print("/".join(a)+r"PyGameTemplate.py") #debug[0] message to ensure the dir building is correct
         exec(open("/".join(a)+r"PyGameTemplate.py").read()) #attempt to locate template file at current dir level
@@ -24,6 +24,7 @@ for i in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
     except:
         pass #function to load template from anywhere on directory path
 s=1
+print(display_size)
 screen = pygame.display.set_mode((int(display_size[0]/s), int(display_size[1]/s)), pygame.RESIZABLE, pygame.SCALED) #set the pygame screen
 
 #-----------------------function(s)-----------------------
@@ -65,42 +66,57 @@ def con(self, speed=50): #temporary controls function, almost same as template o
 
 Player.controls=con #override default controls with new ones
 
-def anim_loop(list_of_elements, colour=(132, 30, 95)):
-    for i in range(frames:=100):
-        print(i/frames*100)
-        t=Timer()
-        the_player.rescale(1.00532039)
-        screen.fill((colour))
-        for a in list_of_elements:
-            a.place()
-        the_player.place()
-        the_player.anim()
-        pygame.display.flip()
-        pygame.time.delay(int(1000/fps - t.time()))
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT: 
-                pygame.display.quit(); return True
-
-def main_loop(list_of_elements, i, colour):
-    collect=[]
-    if {i for i in debug}&{True, 1}: print(f"frame {i}")
+#--------------------------loops--------------------------
+def base_loop_start(list_of_elements, i, colour): #ALWAYS DO t=base_loop_start
+    if {bool(i) for i in debug}&{True}: print(f"frame {i}")
     t=Timer()
-    screen.fill(colour)
+    colour=rainbow(colour)
+    screen.fill(colour.out())
     for a in list_of_elements:
         if debug[1]: print(a.name)
         a.place()
-        collect.append(a.rect_check())
-    act[1]=True in collect
-    if debug[1]: print("player")
-    the_player.check_clicked()
-    the_player.controls(the_player.size[0]/10)
+    return t
+def base_loop_end(t, i): #ALWAYS DO return base_loop_end
     the_player.anim()
+    the_player.place()
     pygame.display.flip()
     if {i for i in debug}&{True, 1}: print(f"{t.time()*1000} milliseconds\nframe {i} end\n")
     pygame.time.delay(int(1000/fps - t.time()))
     for event in pygame.event.get():
         if event.type == pygame.QUIT: 
             pygame.display.quit(); return True
+
+def anim_loop(list_of_elements, i, colour=(132, 30, 95), frames=100, final_scale=1.5):
+    t=base_loop_start(list_of_elements, c, colour)
+    #print(i/frames*100)
+    the_player.rescale(1.5**(1/frames))
+    return base_loop_end(t, i)
+
+
+def rainbow(colour):
+    max_val=200
+    for c in [colour.r, colour.b, colour.g]:
+        if c.tick>=max_val*3:
+            c.tick=0
+        if c.tick<max_val:
+            c.val+=1
+        elif c.tick<max_val*2:
+            c.val-=1
+        c.tick+=1
+    #print(space(a.val), space(b.val), space(c.val))
+    return colour
+
+def main_loop(list_of_elements, i, colour):
+    t=base_loop_start(list_of_elements, c, colour)
+    collect=[]
+    for i in list_of_elements:
+        collect.append(i.rect_check())
+    global act
+    act[1]=True in collect
+    if debug[1]: print("player")
+    the_player.check_clicked()
+    the_player.controls(the_player.size[0]/10)
+    return base_loop_end(t, c)
 
 def changColor(image, color):
     colouredImage = pygame.Surface(image.get_size())
@@ -112,6 +128,7 @@ def changColor(image, color):
 
 loop=[main_loop, anim_loop]
 act = [0, 0]
+
 #-------------------------classes-------------------------
 class Key(Element):
     def __init__(self, player=Player(), coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, name=""):
@@ -131,9 +148,10 @@ class Key(Element):
         self.kill()
         
     def rect_check(self):
+        a, b = (self.rect()[0][0], self.rect()[1][0])
+        c, d = (self.rect()[0][-1], self.rect()[1][-1])
+        if debug[1]: print(f"N: {self.name}, Pos: {self.position} Top left: {(a, b)}, Bottom Right: {(c, d)}"); print(a, b, c, d)
         if debug[2]:
-            a, b = (self.rect()[0][0], self.rect()[1][0])
-            c, d = (self.rect()[0][-1], self.rect()[1][-1])
             Element((a, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
             Element((c, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
             Element((c, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
@@ -159,16 +177,37 @@ for i in [1]:
 #------------------------main line------------------------
 ended=False
 elements=[W, D, S]
-i=0
-colour=(132, 30, 95)
-while not ended:
-    ended=loop[0](elements, i, colour)
+c=0
+def space(x, l=3):
+    while len(str(x))<l:
+        x=str(x)+" "
+    return x
+class N:
+    def __init__(self, val, tick):
+        self.val=val
+        self.tick=tick
+max_val=200
+class Colour:
+    def __init__(self, c1, c2, c3):
+        self.r=c1
+        self.g=c2
+        self.b=c3
+    
+    def out(self):
+        return (self.r.val, self.g.val, self.b.val)
 
-    i+=1
+
+#colour=(132, 30, 95)
+colour = Colour(N(max_val, max_val), N(0, max_val*2), N(0, max_val*3))
+while not ended:
+    ended=loop[0](elements, c, colour)
+    c+=1
     if True in act:
-        for n in act:
-            if n:
-                loop[n](elements, colour)
+        for n, i in enumerate(act):
+            if i:
+                if n==1:
+                    for c in range(frames:=150):
+                        loop[1](elements, i, colour, frames, 5)
 
 back_mus.stop()
 trombone.play(3)

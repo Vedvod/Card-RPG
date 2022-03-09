@@ -47,20 +47,10 @@ def cartesian(coords, reverse=False):
     w, h = pygame.display.get_surface().get_size() #find the size of the screen
     if reverse: 
         return coords[0]+w/2, h/2-coords[1]
-    return coords[0]-w/2, h/2-coords[1] #use width/2 and height/2 as the origin, rather than the top left
+    return coords[0]+w/2, h/2-coords[1] #use width/2 and height/2 as the origin, rather than the top left
     "" #a function to move the origin to the middle of the screen
 
 #-------------------------classes-------------------------
-class Position:
-    def __init__(self, coordinates=(0, 0)):
-        self.coords=coordinates
-        self.x, self.y=self.coords
-
-    def cartesian(self):
-        w, h = pygame.display.get_surface().get_size() #find the size of the screen
-        return Position((self.x+w/2, self.y+h/2)) #use width/2 and height/2 as the origin, rather than the top left
-        "" #a function to move the origin to the middle of the screen
-
 class Timer:
     def __init__(self):
         self.start_time=time.time()
@@ -102,21 +92,14 @@ class Element(Timer):
     def place(self, coords="much too late", SURF=screen): 
         if coords=="much too late": #if coordinates not specified
             coords=self.position #use Element's stored coordinates
-        #print((SUSZ:=pygame.display.get_surface().get_size())[0]/display_size[0], SUSZ[1]/display_size[1])
-        #print(self.name, coords[0]*(SUSZ:=pygame.display.get_surface().get_size())[0]/display_size[0], coords[1]*SUSZ[1]/display_size[1])
-        coords=coords[0]*(SUSZ:=pygame.display.get_surface().get_size())[0]/display_size[0], coords[1]*SUSZ[1]/display_size[1]
-        coords=Position(coords).cartesian() 
-        global prev_size
-        self.rescale((SUSZ:=pygame.display.get_surface().get_size())[0]/prev_size[0], SUSZ[1]/prev_size[1])
-        prev_size=pygame.display.get_surface().get_size()
-        SURF.blit(self.icon, (coords.x, coords.y)) #place element using cartesian coordinates
+        if debug[3]: print(f"Name: {self.name}, Pos: {coords}, CPos: {cartesian(coords)}")
+        SURF.blit(self.icon, cartesian(coords)) #place element using cartesian coordinates
         "" #a function that takes a cartesian coordinate input (i.e. (0, 0) is centering object on center of screen), then converts it to pygame coordinates.
     
     def rect(self):
         a, d = (self.position[0], -(self.position[1]+self.size[1]))
         c, b = (self.position[0]+self.size[1], -(self.position[1]))
         a, b, c, d = [int(x) for x in (a, b, c, d)]
-        if debug[1]: print(f"N: {self.name}, Pos: {self.position} Top left: {(a, b)}, Bottom Right: {(c, d)}"); print(a, b, c, d)
         return np.linspace(a, c, 5*(c-a)+1), np.linspace(b, d, 5*(b-d)+1)
 
     def move(self, x_shift=0, y_shift=0): 
