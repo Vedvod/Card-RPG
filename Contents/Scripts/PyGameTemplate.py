@@ -47,7 +47,7 @@ def cartesian(coords, reverse=False):
     w, h = pygame.display.get_surface().get_size() #find the size of the screen
     if reverse: 
         return coords[0]+w/2, h/2-coords[1]
-    return coords[0]+w/2, h/2-coords[1] #use width/2 and height/2 as the origin, rather than the top left
+    return coords[0]+w/2, h/2+coords[1] #use width/2 and height/2 as the origin, rather than the top left
     "" #a function to move the origin to the middle of the screen
 
 #-------------------------classes-------------------------
@@ -65,7 +65,7 @@ class Element(Timer):
         self.click_timer = Timer()
         self.anim_timer=Timer()
         self.name=name
-        self.position=coords[0], -coords[1]
+        self.position=coords
         self.base=[pygame.image.load(x) for x in (paths_to_assets if type(paths_to_assets)!=str else [paths_to_assets])]
         self.rotation=degrees_of_rotation
         self.sprite_num=sprite_num
@@ -82,24 +82,27 @@ class Element(Timer):
         if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
             self.click_timer.reset()
             mouse_coords=pygame.mouse.get_pos()
+            print(mouse_coords)
             #print(int(self.rect()[0][0]), int(self.rect()[0][-1]))
-            mc=cartesian(mouse_coords)
+            mc=cartesian(mouse_coords, True)
             print(mc)
             #print(f"name: {self.name}, mouse coords: {mc}, player rect x range: {int(self.rect()[0][0]), int(self.rect()[0][-1])}, mouse coords in player x: {mc[0] in range(int(self.rect()[0][0]), int(self.rect()[0][-1]))}, mouse coords in player y: {mc[1] in self.rect()[1]}")
             if mc[0] in self.rect()[0] and mc[1] in self.rect()[1]:
                 print("aaa")
 
-    def place(self, coords="much too late", SURF=screen): 
-        if coords=="much too late": #if coordinates not specified
+    def place(self, coords="nothing", SURF=screen): 
+        if coords=="nothing": #if coordinates not specified
             coords=self.position #use Element's stored coordinates
-        if debug[3]: print(f"Name: {self.name}, Pos: {coords}, CPos: {cartesian(coords)}")
+            coords=coords[0]-self.size[0]/2, coords[1]-self.size[1]/2
+        if debug[3]: print(f"Name: {self.name}, CPos: {coords}, Pos: {cartesian(coords)}")
         SURF.blit(self.icon, cartesian(coords)) #place element using cartesian coordinates
         "" #a function that takes a cartesian coordinate input (i.e. (0, 0) is centering object on center of screen), then converts it to pygame coordinates.
     
     def rect(self):
-        a, d = (self.position[0], -(self.position[1]+self.size[1]))
-        c, b = (self.position[0]+self.size[1], -(self.position[1]))
+        a, d = (self.position[0]-self.size[0]/2, (self.position[1]-self.size[1]/2))
+        c, b = (self.position[0]+self.size[0]/2, (self.position[1]+self.size[1]/2))
         a, b, c, d = [int(x) for x in (a, b, c, d)]
+        if debug[1]: print(f"N: {self.name}, Pos: {self.position} Top left: {(a, b)}, Bottom Right: {(c, d)}"); print(a, b, c, d)
         return np.linspace(a, c, 5*(c-a)+1), np.linspace(b, d, 5*(b-d)+1)
 
     def move(self, x_shift=0, y_shift=0): 
@@ -183,7 +186,7 @@ class Player(Element):
             w, h = pygame.display.get_surface().get_size() #screen size
             if self.position[0]<-w/2: #if at left side of screen
                 self.move(w-1, 0) #move to right side
-            elif self.position[0]>w/2: #if at right side
+            elif self.position[0]+self.size[0]/2>w/2: #if at right side
                 self.move(-w+1, 0) #move to left side
             if self.position[1]<-h/2: #if at top of screen
                 self.move(0, h-1) #move to bottom

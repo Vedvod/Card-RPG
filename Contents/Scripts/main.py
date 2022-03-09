@@ -1,15 +1,9 @@
 debug=[
- 0,
- 0, 
- 0,
+ 0, #show frame start/end
+ 0, #print rect coords
+ 1, #display hitboxes
  0,
  0]
-"""
-debug dictionary:
-0: general stuff idk
-1: rects
-2: hitboxes
-"""
 
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame
@@ -68,7 +62,7 @@ Player.controls=con #override default controls with new ones
 
 #--------------------------loops--------------------------
 def base_loop_start(list_of_elements, i, colour): #ALWAYS DO t=base_loop_start
-    if {bool(i) for i in debug}&{True}: print(f"frame {i}")
+    if debug[0]: print(f"frame {i}")
     t=Timer()
     colour=rainbow(colour)
     screen.fill(colour.out())
@@ -80,7 +74,7 @@ def base_loop_end(t, i): #ALWAYS DO return base_loop_end
     the_player.anim()
     the_player.place()
     pygame.display.flip()
-    if {i for i in debug}&{True, 1}: print(f"{t.time()*1000} milliseconds\nframe {i} end\n")
+    if debug[0]: print(f"{t.time()*1000} milliseconds\nframe {i} end\n")
     pygame.time.delay(int(1000/fps - t.time()))
     for event in pygame.event.get():
         if event.type == pygame.QUIT: 
@@ -94,15 +88,18 @@ def anim_loop(list_of_elements, i, colour=(132, 30, 95), frames=100, final_scale
 
 
 def rainbow(colour):
-    max_val=200
+    global max_val
     for c in [colour.r, colour.b, colour.g]:
+        if c.tick%1!=0:
+            c.tick+=0.5
+            continue
         if c.tick>=max_val*3:
             c.tick=0
         if c.tick<max_val:
             c.val+=1
         elif c.tick<max_val*2:
             c.val-=1
-        c.tick+=1
+        c.tick+=0.5
     #print(space(a.val), space(b.val), space(c.val))
     return colour
 
@@ -113,7 +110,7 @@ def main_loop(list_of_elements, i, colour):
         collect.append(i.rect_check())
     global act
     act[1]=True in collect
-    if debug[1]: print("player")
+    if debug[0]: print("player")
     the_player.check_clicked()
     the_player.controls(the_player.size[0]/10)
     return base_loop_end(t, c)
@@ -150,7 +147,6 @@ class Key(Element):
     def rect_check(self):
         a, b = (self.rect()[0][0], self.rect()[1][0])
         c, d = (self.rect()[0][-1], self.rect()[1][-1])
-        if debug[1]: print(f"N: {self.name}, Pos: {self.position} Top left: {(a, b)}, Bottom Right: {(c, d)}"); print(a, b, c, d)
         if debug[2]:
             Element((a, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
             Element((c, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
@@ -163,14 +159,14 @@ class PressShow(Element):
 
 #--------------------------setup--------------------------
 for i in [1]:
-    found_keys="A" #the keys the player can use
-    the_player=Player(coords=(0, 20), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
+    found_keys="WADS" #the keys the player can use
+    the_player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
     W=Key(the_player, coords=(100, 300), key_name="w", name="w_key") 
     D=Key(the_player, coords=(0, 153), key_name="d", name="d_key")
     S=Key(the_player, coords=(-253, 0), key_name="s", name="s_key")
     #collectable keys
     trombone=play(get_target("GameAssets.lnk")+"\sounds\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
-    back_mus=play(get_target("GameAssets.lnk")+"\sounds\quieter.wav"); back_mus.play(-1)
+    back_mus=play(get_target("GameAssets.lnk")+"\sounds\quieter.wav"); back_mus.stop(); #back_mus.play(-1)
     #sounds
     fps=60 #framerate
 
@@ -186,7 +182,7 @@ class N:
     def __init__(self, val, tick):
         self.val=val
         self.tick=tick
-max_val=200
+max_val=165
 class Colour:
     def __init__(self, c1, c2, c3):
         self.r=c1
@@ -210,7 +206,7 @@ while not ended:
                         loop[1](elements, i, colour, frames, 5)
 
 back_mus.stop()
-trombone.play(3)
+#trombone.play(3)
 time.sleep(3.5)
 input("Press Enter to exit the script...")
 pygame.quit()
