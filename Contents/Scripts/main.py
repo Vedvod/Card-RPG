@@ -1,7 +1,7 @@
 debug=[
  0, #show frame start/end
  0, #print rect coords
- 1, #display hitboxes
+ 0, #display hitboxes
  0,
  0]
 
@@ -17,16 +17,14 @@ for c in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
         break #if the file is opened
     except:
         pass #function to load template from anywhere on directory path
-s=1
-print(display_size)
-screen = pygame.display.set_mode((int(display_size[0]/s), int(display_size[1]/s)), pygame.RESIZABLE, pygame.SCALED) #set the pygame screen
+
+print(f"screen size is {display_size}")
+s=1; screen = pygame.display.set_mode((int(display_size[0]/s), int(display_size[1]/s)), pygame.RESIZABLE, pygame.SCALED) #set up the pygame screen
 
 #-----------------------function(s)-----------------------
 found=lambda x: x in found_keys #shorthand for brevity
 pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key pressed
-
 def con(self, speed=50): #temporary controls function, almost same as template one
-    global pressed
     x, y = 0, 0
     if (pressed("LEFT") or pressed("a")) and found("A"):
         x-=speed
@@ -64,7 +62,6 @@ Player.controls=con #override default controls with new ones
 def base_loop_start(list_of_elements, i, colour): #ALWAYS DO t=base_loop_start
     if debug[0]: print(f"frame {i}")
     t=Timer()
-    colour=rainbow(colour)
     screen.fill(colour.out())
     for a in list_of_elements:
         if debug[1]: print(a.name)
@@ -78,9 +75,11 @@ def base_loop_end(t, i): #ALWAYS DO return base_loop_end
     pygame.time.delay(int(1000/fps - t.time()))
     for event in pygame.event.get():
         if event.type == pygame.QUIT: 
-            pygame.display.quit(); return True
+            return True
+    return False
 
 def anim_loop(list_of_elements, i, colour=(132, 30, 95), frames=100, final_scale=1.5):
+    colour=rainbow(colour) #change colour across cyclic rainbow spectrum
     t=base_loop_start(list_of_elements, c, colour)
     #print(i/frames*100)
     the_player.rescale(1.5**(1/frames))
@@ -157,16 +156,20 @@ class Key(Element):
 class PressShow(Element):
     pass
 
+class Game():
+    def __init__(self):
+        pass
+
 #--------------------------setup--------------------------
 for i in [1]:
-    found_keys="WADS" #the keys the player can use
+    found_keys="A" #the keys the player can use
     the_player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
     W=Key(the_player, coords=(100, 300), key_name="w", name="w_key") 
     D=Key(the_player, coords=(0, 153), key_name="d", name="d_key")
     S=Key(the_player, coords=(-253, 0), key_name="s", name="s_key")
     #collectable keys
     trombone=play(get_target("GameAssets.lnk")+"\sounds\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
-    back_mus=play(get_target("GameAssets.lnk")+"\sounds\quieter.wav"); back_mus.stop(); #back_mus.play(-1)
+    back_mus=play(get_target("GameAssets.lnk")+"\sounds\quieter.wav"); back_mus.stop(); back_mus.play(-1)
     #sounds
     fps=60 #framerate
 
@@ -195,7 +198,7 @@ class Colour:
 
 #colour=(132, 30, 95)
 colour = Colour(N(max_val, max_val), N(0, max_val*2), N(0, max_val*3))
-while not ended:
+while not ended==True:
     ended=loop[0](elements, c, colour)
     c+=1
     if True in act:
@@ -203,10 +206,12 @@ while not ended:
             if i:
                 if n==1:
                     for c in range(frames:=150):
-                        loop[1](elements, i, colour, frames, 5)
+                        if not ended and loop[1](elements, i, colour, frames, 5):
+                                ended=1
 
 back_mus.stop()
-#trombone.play(3)
+trombone.play(3)
+pygame.quit()
 time.sleep(3.5)
 input("Press Enter to exit the script...")
 pygame.quit()

@@ -1,3 +1,0 @@
-1. Collect keys gaem
- - keyboard input for a given key will not be read unless the key is collected ingame
-  - this also applies to movement keys
