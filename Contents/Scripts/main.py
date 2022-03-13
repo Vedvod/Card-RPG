@@ -2,7 +2,7 @@ debug=[
  0, #show frame start/end
  0, #print rect coords
  0, #display hitboxes
- 0,
+ 0, #
  0]
 
 #-------------------------modules-------------------------
@@ -12,14 +12,14 @@ for c in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
     try: a.append(c) #move onto the next step
     except: a=[c] #if i is first step
     try:
-        if debug[0]: print("/".join(a)+r"PyGameTemplate.py") #debug[0] message to ensure the dir building is correct
         exec(open("/".join(a)+r"PyGameTemplate.py").read()) #attempt to locate template file at current dir level
         break #if the file is opened
-    except:
-        pass #function to load template from anywhere on directory path
+    except: pass #function to load template from anywhere on directory path
 
-print(f"screen size is {display_size}")
-s=1; screen = pygame.display.set_mode((int(display_size[0]/s), int(display_size[1]/s)), pygame.RESIZABLE, pygame.SCALED) #set up the pygame screen
+print(f"your screen size is {display_size}.")
+s=1; #screen = pygame.display.set_mode((int(display_size[0]/s), int(display_size[1]/s)), pygame.RESIZABLE, pygame.SCALED) #set up the pygame screen
+screen = pygame.display.set_mode((display_size[0]//s, display_size[1]//s), pygame.RESIZABLE, pygame.SCALED) #set up the pygame screen
+
 
 #-----------------------function(s)-----------------------
 found=lambda x: x in found_keys #shorthand for brevity
@@ -156,9 +156,10 @@ class Key(Element):
 class PressShow(Element):
     pass
 
-class Game():
-    def __init__(self):
-        pass
+class Game:
+    def __init__(self, elements=list(), player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player")):
+        self.elements=elements
+        self.player=player
 
 #--------------------------setup--------------------------
 for i in [1]:

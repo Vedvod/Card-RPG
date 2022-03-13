@@ -1,4 +1,4 @@
-#-------------------------modules-------------------------
+ #-------------------------modules-------------------------
 import os, random, time, sys, math, cmath, pygame, numpy as np
 pygame.init(); os.system("cls"); print("pygame 2.6.9 (SDL 2.0.22, Python 3.11.5)")
 display_size=list(pygame.display.get_desktop_sizes()[0])
@@ -85,7 +85,7 @@ class Element(Timer):
             print(mouse_coords)
             #print(int(self.rect()[0][0]), int(self.rect()[0][-1]))
             mc=cartesian(mouse_coords, True)
-            print(mc)
+            if debug[3]: print(mc)
             #print(f"name: {self.name}, mouse coords: {mc}, player rect x range: {int(self.rect()[0][0]), int(self.rect()[0][-1])}, mouse coords in player x: {mc[0] in range(int(self.rect()[0][0]), int(self.rect()[0][-1]))}, mouse coords in player y: {mc[1] in self.rect()[1]}")
             if mc[0] in self.rect()[0] and mc[1] in self.rect()[1]:
                 print("aaa")
