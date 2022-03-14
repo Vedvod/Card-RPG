@@ -105,7 +105,9 @@ class Element(Timer):
         if debug[1]: print(f"N: {self.name}, Pos: {self.position} Top left: {(a, b)}, Bottom Right: {(c, d)}"); print(a, b, c, d)
         return np.linspace(a, c, 5*(c-a)+1), np.linspace(b, d, 5*(b-d)+1)
 
-    def move(self, x_shift=0, y_shift=0): 
+    def move(self, x_shift=0, y_shift=0, flipped=(False, False)): 
+        x_shift*=(-1)**flipped[0]
+        y_shift*=(-1)**flipped[1]
         self.position=self.position[0]+x_shift, self.position[1]+y_shift #add each shift
         "" #a function to move the element
 
