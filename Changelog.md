@@ -1,8 +1,9 @@
-﻿# Card-RPG
-This is my SDD HSC Major project. As of now (10-02-2022), I am unsure of the direction that I wish to take this project in. I will likely have a greater idea of this direction as the development of generic tools progresses.
+﻿# Keyless Karlsson: Changelog
+This is the changelog of my SDD HSC Major project.
 
-# Changelog
 ## Pre-Alpha: Setting up files
+To start the project lol.
+
 ### 2021/12/21
 - I began work on my project. I created the project repository on Github, and began planning the contents of my project.
  
@@ -17,6 +18,8 @@ This is my SDD HSC Major project. As of now (10-02-2022), I am unsure of the dir
 - Using this function, I made some slight changes to the project hierarchy. I created a main [Contents](https://github.com/Vedvod/Card-RPG/tree/main/Contents) directory, containing both [GameAssets](https://github.com/Vedvod/Card-RPG/tree/main/Contents/GameAssets) and [Scripts](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts). In order to access [GameAssets](https://github.com/Vedvod/Card-RPG/tree/main/Contents/GameAssets) from [Scripts](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts), I have a GameAssets.lnk inside the [Scripts](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts) folder.
 
 ## Alpha 1: Level file loader
+To place elements as per a level config file
+
 ### 2021/12/25
 - I implemented a file loading system, which is able to load a file written in a certain format and then load every element in the file onto the screen. This is a major milestone as every level will likely use this mechanic to load screen elements. As understanding of the requirements of the game is enhanced, this system will be altered to meet these changing requirements.
   - The operation of this system is relatively simple, with the configuration file being a list of `Element` objects written in Pythonic format. The script then runs an `eval()` on the `open()`ed contents of the given file, thus loading the list into the script. 
@@ -51,6 +54,8 @@ Though not directly related to this project, I have made several concepts that m
   - This will possibly allow me to add user interaction to this process, maybe eventually allowing the user to make their own music in the game.
 
 ## Alpha 2: Resizing and spacial mapping
+To place the elements and scale them with the screen.
+
 ### 2022/02/09
 - I returned to working on the pygame visual elements.
   - Made the game window resizable.
@@ -62,10 +67,57 @@ Though not directly related to this project, I have made several concepts that m
 ### 2022/02/10
 - I improved upon the graphing in the "luck-based" concept, adding a matplotlib pyplot graph to better visualise the distribution. 
 
-##Alpha 3: Text-based UNO base concept
+## Side plot: Text-based UNO base concept
+I have no ideas, so I'll work on this for now.
+
 ### 2022/02/15
 - I decided to leave the pygame visuals alone for now, since I was not making much progress. I will be focusing more on the logic, with text-based visuals as a placeholder. 
-- I decided with certainty that I will be making an Uno variant game.
+- I decided to work on an Uno variant game in the interim of ideas.
 
 ### 2022/02/21
-- I 
+- I worked more on the cards and their display.
+  - This was easy and worked with minimal struggle.
+
+### 2022/02/24
+- I added power cards to my game, excluding reverse
+  - This was challenging as I had to rewrite the existing system to accomodate wild and draw cards.
+    - Since the draw two and draw four cards use the same system, I had to differntiate them and also track the current draw amount from stacking.
+    - In the end, I got it to work as I wanted it to.
+
+## Alpha 3: An actual idea!
+To turn a bad idea into a maybe good idea.
+
+### 2022/02/25
+- I finally decided on an idea, being a game where you collect keys for your keyboard. 
+  - I have not decided on a name yet, but the interim name is Out of Control.
+  - In order to move with the arrow keys, the keys must be collected in the game. This also applies to other keys.
+    - In the end, after you collect the keys you will have to type in a password to open a door and win the game.
+- I implemented the `pygame.mixer` module to replace the playsound and threading modules.
+- I updated the `Player.controls()` function to accomodate screen wrapping.
+- I created sprites for my game character, Keyless Karl.
+- Overall, this transition to an actual game idea was smoother than I expected, I stored the Uno concept away for later, I might implement it into my game, but do not expect to.
+
+## Beta 1.0: Keyless Karlsson
+I renamed the game and it's now official.
+
+### 2022/02/27
+- I started on the keyless logic of the game.
+  - This involves locking a key's input until its digital counterpart is collected.
+  - To achieve this, I copied the `Player.controls()` function and modified it to include the found lambda function (`found=lambda x: x in found_keys`).
+- I implemented the `Player` object and movement, but have not implemented keys yet.
+  - The player is limited to the keys in `found_keys`, which is good. Testing of this feature was successful.
+
+## Beta 1.1: Rect collision
+To test if two elements overlap.
+
+### 2022/02/28
+- I added sprites for the keys, and implemented them.
+  - Implemented an `Element.rect()` that returns the range of coordinates that an element occupies.
+  - When the `Player.rect()` intersects with a `Key.rect()`, it triggers `Key.rect_check()`'s positive.
+    - This adds the key to the `found_keys` list and removes itself from the list of elements.
+
+### 2022/03/02
+- I added clicking detection (unsure of usage for now).
+- I optimised some code relating to the `Timer`, making implementation smoother.
+- I added all the directional keys and set up a basis for an `anim_loop()` function, in order to have a collection animation.
+
