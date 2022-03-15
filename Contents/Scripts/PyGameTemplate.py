@@ -75,6 +75,7 @@ class Element(Timer):
         self.true_size=self.size
         self.icon=pygame.transform.rotate(pygame.transform.scale(self.base[self.sprite_num-1], self.size), self.rotation)
         screen.blit(self.icon, cartesian(self.position))
+        self.flipped=[0, 0]
         "" #a function that is essential to the class, defining initial attributes.
 
     def check_clicked(self):
@@ -105,9 +106,9 @@ class Element(Timer):
         if debug[1]: print(f"N: {self.name}, Pos: {self.position} Top left: {(a, b)}, Bottom Right: {(c, d)}"); print(a, b, c, d)
         return np.linspace(a, c, 5*(c-a)+1), np.linspace(b, d, 5*(b-d)+1)
 
-    def move(self, x_shift=0, y_shift=0, flipped=(False, False)): 
-        x_shift*=(-1)**flipped[0]
-        y_shift*=(-1)**flipped[1]
+    def move(self, x_shift=0, y_shift=0): 
+        x_shift*=(-1)**self.flipped[0]
+        y_shift*=(-1)**self.flipped[1]
         self.position=self.position[0]+x_shift, self.position[1]+y_shift #add each shift
         "" #a function to move the element
 
@@ -125,7 +126,8 @@ class Element(Timer):
             self.reinit()
 
     def reinit(self):
-        self.icon=pygame.transform.rotate(pygame.transform.scale(self.sprite(), self.size), self.rotation)
+        pt=pygame.transform
+        self.icon=pt.flip(pt.rotate(pt.scale(self.sprite(), self.size), self.rotation), self.flipped[0], self.flipped[1])
         "" #a function that updates the element's icon to match changes in attributes. Generally called by other function.
 
     def rotate(self, degrees_to_rotate):

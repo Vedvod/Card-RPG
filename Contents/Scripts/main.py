@@ -2,7 +2,7 @@ debug=[
  0, #show frame start/end
  0, #print rect coords
  0, #display hitboxes
- 0, #
+ 0, #player position
  0]
 
 #-------------------------modules-------------------------
@@ -40,14 +40,15 @@ def con(self, speed=50): #temporary controls function, almost same as template o
     #wraps by default
     w, h = pygame.display.get_surface().get_size() #screen size
     if self.position[0]<-w/2: #if at left side of screen
-        self.move(w-1, 0) #move to right side
+        self.move((-1)**self.flipped[0]*(w+1), 0) #move to right side
     elif self.position[0]>w/2: #if at right side
-        self.move(-w+1, 0) #move to left side
+        self.move((-1)**self.flipped[0]*(-w+1), 0) #move to left side
     if self.position[1]<-h/2: #if at top of screen
         self.move(0, h-1) #move to bottom
     elif self.position[1]>h/2: #if at bottom
         self.move(0, -h+1) #move to top
     self.place() #place the player
+    if debug[4]: print(self.position)
     if debug[2]: #shows hitboxes
         a, b = (self.rect()[0][0], self.rect()[1][0])
         c, d = (self.rect()[0][-1], self.rect()[1][-1])
@@ -101,8 +102,10 @@ class PressShow(Element):
 
 class Flip(Element):
     def __init__(self, coords, axis="x", name=""):
-        degrees_of_rotation=90
-        if axis=="x": degrees_of_rotation=0
+        assert axis.lower() in ("x", "y"), ValueError(f'The given axis is {axis}, but the axis must be "x" or "y"')
+        if axis=="y": self.axis=1
+        if axis=="x": self.axis=0
+        degrees_of_rotation=self.axis*90
         super().__init__(coords, rf'{get_target("GameAssets.lnk")}/flipper.png', (50, 50), degrees_of_rotation)
         self.name=name
         self.player=Player()
@@ -113,7 +116,7 @@ class Flip(Element):
 
     def collide(self):
         if debug[0]: print("collided")
-        pass
+        self.player.flipped[self.axis]=not self.player.flipped[self.axis]
         self.kill()
         
     def rect_check(self):
@@ -179,10 +182,11 @@ class Game:
 
     def main_loop(self, list_of_elements, i, colour, act):
         t=self.base_loop_start(list_of_elements, c, colour)
-        collect=[]
+        collect_1=[]
         for i in list_of_elements:
-            if type(i)==Key: collect.append(i.rect_check())
-        act[1]=True in collect
+            if type(i)==Key: collect_1.append(i.rect_check())
+            else: i.rect_check()
+        act[1]=True in collect_1
         if debug[0]: print("player")
         self.player.check_clicked()
         self.player.controls(self.player.size[0]/10)
@@ -208,12 +212,12 @@ class Game:
 
 #--------------------------setup--------------------------
 for i in [1]:
-    found_keys="A" #the keys the player can use
+    found_keys="WSDA" #the keys the player can use
     #the_player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
     W=Key(coords=(100, 300), key_name="w", name="w_key") 
     D=Key(coords=(0, 153), key_name="d", name="d_key")
     S=Key(coords=(-253, 0), key_name="s", name="s_key")
-    F=Flip((-50, 150), "y")
+    F=Flip((-50, 150), "x")
     #collectable keys
     trombone=play(get_target("GameAssets.lnk")+"\sounds\lose_trombone.mp3"); trombone.set_volume(0.50); trombone.stop()
     back_mus=play(get_target("GameAssets.lnk")+"\sounds\quieter.wav"); back_mus.stop(); back_mus.play(-1)
