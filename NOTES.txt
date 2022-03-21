@@ -1,0 +1,1 @@
+https://gamedev.stackexchange.com/questions/184330/non-rectangular-collision-detection-in-python-and-pygame

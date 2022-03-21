@@ -2,8 +2,8 @@ debug=[
  0, #show frame start/end
  0, #print rect coords
  0, #display hitboxes
- 0, #player position
- 0]
+ [""], #place()
+ 0] #player position
 
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame
@@ -24,15 +24,20 @@ screen = pygame.display.set_mode((display_size[0]//s, display_size[1]//s), pygam
 #-----------------------function(s)-----------------------
 found=lambda x: x in found_keys #shorthand for brevity
 pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key pressed
-def con(self, speed=50): #temporary controls function, almost same as template one
-    x, y = 0, 0
-    if (pressed("LEFT") or pressed("a")) and found("A"):
+def con(self): #temporary controls function, almost same as template one
+    speed=self.speed
+    if self.blocked:
+        print(self.last, self.flipped, "left" if pressed("LEFT") else "right")
+        self.blocked=False
+        return
+    x, y = 0, 0 #zero vector
+    if pressed("LEFT"):
         x-=speed
-    if (pressed("RIGHT") or pressed("d")) and found("D"):
+    if pressed("RIGHT"):
         x+=speed
-    if (pressed("DOWN") or pressed("s")) and found("S"):
+    if pressed("DOWN"):
         y-=speed
-    if (pressed("UP") or pressed("w")) and found("W"):
+    if pressed("UP"):
         y+=speed
     #all above creates the vector in x and y
     _=self.circle_movement((x, -y), speed)[1] #use the circle_movement function to create a vector with constant magnitude in direction of above
@@ -44,9 +49,9 @@ def con(self, speed=50): #temporary controls function, almost same as template o
     elif self.position[0]>w/2: #if at right side
         self.move((-1)**self.flipped[0]*(-w+1), 0) #move to left side
     if self.position[1]<-h/2: #if at top of screen
-        self.move(0, h-1) #move to bottom
+        self.move(0, (-1)**self.flipped[1]*(h-1)) #move to bottom
     elif self.position[1]>h/2: #if at bottom
-        self.move(0, -h+1) #move to top
+        self.move(0, (-1)**self.flipped[1]*(-h+1)) #move to top
     self.place() #place the player
     if debug[4]: print(self.position)
     if debug[2]: #shows hitboxes
@@ -56,6 +61,7 @@ def con(self, speed=50): #temporary controls function, almost same as template o
         Element((c, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
         Element((c, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
         Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+    self.last=(x, y)
 
 Player.controls=con #override default controls with new ones
 
@@ -71,9 +77,9 @@ def changColor(image, color):
 
 #-------------------------classes-------------------------
 class Key(Element):
-    def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, name=""):
+    def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0):
         super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation)
-        self.name=key_name
+        self.name=key_name+" key"
         self.key=key_name.upper()
         self.player=Player()
         self.game=Game()
@@ -101,23 +107,40 @@ class PressShow(Element):
     pass
 
 class Flip(Element):
-    def __init__(self, coords, axis="x", name=""):
+    def __init__(self, coords, axis="x", name="flip"):
         assert axis.lower() in ("x", "y"), ValueError(f'The given axis is {axis}, but the axis must be "x" or "y"')
         if axis=="y": self.axis=1
         if axis=="x": self.axis=0
         degrees_of_rotation=self.axis*90
-        super().__init__(coords, rf'{get_target("GameAssets.lnk")}/flipper.png', (50, 50), degrees_of_rotation)
+        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Flipper/flipper.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_half_used.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_used.png'], (50, 50), degrees_of_rotation)
         self.name=name
         self.player=Player()
         self.game=Game()
+        self.active=2
     
+    def respawn(self):
+        if self.a.time()>=2 and self.active==0:
+            self.active=1
+            self.sprite_num=3-self.active
+            self.reinit()
+        if self.a.time()>=4 and self.active==1:
+            self.active=2
+            self.sprite_num=3-self.active
+            self.game.respawners.remove(self)
+            self.reinit()
+
     def kill(self):
-        game.elements.remove(self)
+        self.a=Timer()
+        self.active=0
+        self.sprite_num=3-self.active
+        self.game.respawners.append(self)
 
     def collide(self):
-        if debug[0]: print("collided")
-        self.player.flipped[self.axis]=not self.player.flipped[self.axis]
-        self.kill()
+        if self.active and self.active==2:
+            if debug[0]: print("collided")
+            self.player.flipped[self.axis]=not self.player.flipped[self.axis]
+            self.kill()
+        self.reinit()
         
     def rect_check(self):
         a, b = (self.rect()[0][0], self.rect()[1][0])
@@ -127,7 +150,11 @@ class Flip(Element):
             Element((c, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
             Element((c, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
             Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
-        if set(self.rect()[0])&set(self.player.rect()[0]) and set(self.rect()[1])&set(self.player.rect()[1]): self.collide(); return True
+        if set(self.rect()[0])&set(self.player.rect()[0]) and set(self.rect()[1])&set(self.player.rect()[1]):
+            self.player.blocked=True
+            self.collide()
+            return True
+        
             
 class Game:
     def __init__(self, elements=list(), player=Player()):
@@ -136,6 +163,7 @@ class Game:
             i.player=player
             i.game=self
         self.player=player
+        self.respawners=[]
 
     def base_loop_start(self, list_of_elements, i, colour): #ALWAYS DO t=base_loop_start
         if debug[0]: print(f"frame {i}")
@@ -160,9 +188,8 @@ class Game:
         colour=self.rainbow(colour) #change colour across cyclic rainbow spectrum
         t=self.base_loop_start(list_of_elements, c, colour)
         #print(i/frames*100)
-        self.player.rescale(1.5**(1/frames))
+        self.player.rescale(final_scale**(1/frames))
         return self.base_loop_end(t, i)
-
 
     def rainbow(self, colour):
         global max_val
@@ -180,16 +207,20 @@ class Game:
         #print(space(a.val), space(b.val), space(c.val))
         return colour
 
-    def main_loop(self, list_of_elements, i, colour, act):
+    def main_loop(self, list_of_elements, c, colour, act):
         t=self.base_loop_start(list_of_elements, c, colour)
+        for i in self.respawners:
+            i.respawn()
         collect_1=[]
         for i in list_of_elements:
             if type(i)==Key: collect_1.append(i.rect_check())
-            else: i.rect_check()
+            else: 
+                try: i.rect_check()
+                except: i.place()
         act[1]=True in collect_1
         if debug[0]: print("player")
         self.player.check_clicked()
-        self.player.controls(self.player.size[0]/10)
+        self.player.controls()
         return act, self.base_loop_end(t, c)
 
     def wrapper(self):
@@ -206,23 +237,24 @@ class Game:
                     if i:
                         act[i]=0
                         if n==1:
-                            for e in range(frames:=150):
-                                if not ended and loop[1](elements, i, colour, frames, 5):
+                            for e in range(frames:=75):
+                                if not ended and loop[1](elements, c, colour, frames, 1.25):
                                         ended=1
 
 #--------------------------setup--------------------------
-for i in [1]:
-    found_keys="WSDA" #the keys the player can use
+for i in "1":
+    found_keys="a".upper() #the keys the player can use
     #the_player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
-    W=Key(coords=(100, 300), key_name="w", name="w_key") 
-    D=Key(coords=(0, 153), key_name="d", name="d_key")
-    S=Key(coords=(-253, 0), key_name="s", name="s_key")
-    F=Flip((-50, 150), "x")
+    W=Key(coords=(100, 300), key_name="w") 
+    D=Key(coords=(0, 153), key_name="d")
+    S=Key(coords=(-253, 0), key_name="s")
+    F=Flip((-250, 160), "x")
+    F2=Flip((330, 250), "y")
     #collectable keys
-    trombone=play(get_target("GameAssets.lnk")+"\sounds\lose_trombone.mp3"); trombone.set_volume(0.50); trombone.stop()
+    trombone=play(get_target("GameAssets.lnk")+"\sounds\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
     back_mus=play(get_target("GameAssets.lnk")+"\sounds\quieter.wav"); back_mus.stop(); back_mus.play(-1)
     #sounds
-    fps=60 #framerate
+    fps=100 #framerate
 
 #------------------------main line------------------------
 ended=False
@@ -247,10 +279,13 @@ class Colour:
 
 #colour=(132, 30, 95)
 colour = Colour(N(max_val, max_val), N(0, max_val*2), N(0, max_val*3))
-game=Game([W, D, S, F], Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player"))
+game=Game(
+    [W, D, S, F, F2],
+    #[], 
+    Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=80, _), name="player")); game.player.speed=game.player.size[0]/15
 game.wrapper()
 back_mus.stop()
-trombone.play(3)
+trombone.play(1)
 pygame.display.quit()
 time.sleep(3.5)
 input("Press Enter to exit the script...")

@@ -46,7 +46,7 @@ def project(vector_1, vector_2):
 def cartesian(coords, reverse=False):
     w, h = pygame.display.get_surface().get_size() #find the size of the screen
     if reverse: 
-        return coords[0]+w/2, h/2-coords[1]
+        return coords[0]-w/2, h/2-coords[1]
     return coords[0]+w/2, h/2+coords[1] #use width/2 and height/2 as the origin, rather than the top left
     "" #a function to move the origin to the middle of the screen
 
@@ -83,19 +83,18 @@ class Element(Timer):
         if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
             self.click_timer.reset()
             mouse_coords=pygame.mouse.get_pos()
-            print(mouse_coords)
             #print(int(self.rect()[0][0]), int(self.rect()[0][-1]))
             mc=cartesian(mouse_coords, True)
-            if debug[3]: print(mc)
+            if "mouse" in debug[3]: print(mc, self.rect())
             #print(f"name: {self.name}, mouse coords: {mc}, player rect x range: {int(self.rect()[0][0]), int(self.rect()[0][-1])}, mouse coords in player x: {mc[0] in range(int(self.rect()[0][0]), int(self.rect()[0][-1]))}, mouse coords in player y: {mc[1] in self.rect()[1]}")
-            if mc[0] in self.rect()[0] and mc[1] in self.rect()[1]:
+            if self.inrect(mc):
                 print("aaa")
 
     def place(self, coords="nothing", SURF=screen): 
         if coords=="nothing": #if coordinates not specified
             coords=self.position #use Element's stored coordinates
             coords=coords[0]-self.size[0]/2, coords[1]-self.size[1]/2
-        if debug[3]: print(f"Name: {self.name}, CPos: {coords}, Pos: {cartesian(coords)}")
+        if self.name in debug[3]: print(f"Name: {self.name}, CPos: {coords}, Pos: {cartesian(coords)}")
         SURF.blit(self.icon, cartesian(coords)) #place element using cartesian coordinates
         "" #a function that takes a cartesian coordinate input (i.e. (0, 0) is centering object on center of screen), then converts it to pygame coordinates.
     
@@ -104,7 +103,14 @@ class Element(Timer):
         c, b = (self.position[0]+self.size[0]/2, (self.position[1]+self.size[1]/2))
         a, b, c, d = [int(x) for x in (a, b, c, d)]
         if debug[1]: print(f"N: {self.name}, Pos: {self.position} Top left: {(a, b)}, Bottom Right: {(c, d)}"); print(a, b, c, d)
-        return np.linspace(a, c, 5*(c-a)+1), np.linspace(b, d, 5*(b-d)+1)
+        return np.linspace(a, c, 10*(c-a)+1), np.linspace(b, d, 10*(b-d)+1)
+
+    def inrect(self, coords):
+        r=self.rect()
+        a, b, c, d = r[0][0], r[1][0], r[0][-1], r[1][-1]
+        return a<=coords[0]<=b, c<=coords[1]<=d
+    
+    #def interrect()
 
     def move(self, x_shift=0, y_shift=0): 
         x_shift*=(-1)**self.flipped[0]
@@ -167,13 +173,15 @@ class Element(Timer):
     "" #the base class for all elements
 
 class Player(Element):
-    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, sprite_num=1, name=""):
+    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, sprite_num=1, name="", speed=50):
         super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num)
         self.anim_timer=Timer()
         self.name=name
+        self.blocked=False
 
     pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key pressed
-    def controls(self, speed=50, wrap=False): 
+    def controls(self, wrap=False): 
+        speed=self.speed
         x, y = 0, 0 #zero vector
         if pressed("LEFT"):
             x-=speed
