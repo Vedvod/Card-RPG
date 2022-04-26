@@ -31,35 +31,41 @@ def play(location):
     return x
     "" #play a sound from file
 
-def scalar(vector):
-    x, y = vector[1][0]-vector[0][0], vector[1][1]-vector[0][1] #gets the differences in x and y coordinates
-    return math.sqrt(x**2 + y**2) #uses pythagorus to find hypotenuse (shortest distance) length
-    "" #find the modulus of a vector
-
-def project(vector_1, vector_2):
-    magnitude = scalar(vector_2) #find modulus of the second vector
-    _, angle = cmath.polar(complex(vector_1[1][0], vector_1[1][1])-complex(vector_1[0][0], vector_1[0][1])) #find the polar coordinates angle of vector 1 shifted to (0, 0)
-    projection=(0, 0),(vector_1[0][0]+magnitude*math.cos(angle), vector_1[0][1]+magnitude*math.sin(angle)) #make a vector in the direction of vector 1 with the same length as vector 2
-    return projection
-    "" #a basic vector projection function
-
-def cartesian(coords, reverse=False):
-    w, h = pygame.display.get_surface().get_size() #find the size of the screen
-    if reverse: 
-        return coords[0]-w/2, h/2+coords[1]
-    return coords[0]+w/2, h/2-coords[1] #use width/2 and height/2 as the origin, rather than the top left
-    "" #a function to move the origin to the middle of the screen
-
 #-------------------------classes-------------------------
 class Position:
-    def __init__(self, real_coords):
+    def __init__(self, real_coords, cartesian=False):
         self.x = real_coords[0]
         self.y = real_coords[1]
+        if cartesian:
+            w, h = pygame.display.get_surface().get_size()
+            self.x+=w/2
+            self.y=h/2-self.y
 
     def cartesian(self):
         w, h = pygame.display.get_surface().get_size() #find the size of the screen
-        return self.x-w, self.y+h #use width/2 and height/2 as the origin, rather than the top left
+        return Position((self.x-w/2, h/2-self.y))  #use width/2 and height/2 as the origin, rather than the top left
         "" #a function to move the origin to the middle of the screen
+
+    def tup(self):
+        return self.x, self.y
+
+class Vector:
+    def __init__(self, x=0, y=0, polar=False):
+        self.i=x
+        self.j=y
+        if polar:
+            self.i, self.j = (_:=cmath.rect(x, y)).real, _.imag
+        self.angle = math.atan(self.j/self.i)
+        self.magnitude = (self.i**2+self.j**2)**0.5
+
+    def unit(self):
+        return Vector(_:=(1/(math.tan(self.angle)**2+1)**0.5), _*math.tan(self.angle))
+
+    def tup(self): 
+        return self.i, self.j
+
+    def movement(self, position):
+        return Position((position.x+self.i, position.y+self.j))
 
 class Timer:
     def __init__(self): #initialise the time
@@ -69,54 +75,26 @@ class Timer:
     def reset(self):
         self.start_time=time.time()
 
-
-
-    def circle_movement(self, direction, speed):
-        return project(((0, 0), direction), ((0, 0), (0, speed)))
-
-    def sprite(self): 
-        return self.base[self.sprite_num-1]
-        "" #a convenient shorthand for the currently toggled display sprite.
-    
-    def anim(self):
-        if self.anim_timer.time()>=0.15:
-            self.anim_timer.reset()
-            self.sprite_num = (self.sprite_num+1 if self.sprite_num<len(self.base) else 1)
-            self.reinit()
 class Element:
-    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, name="generic", sprite_num=1):
-        super().__init__()
-        self.click_timer = Timer()
-        self.anim_timer=Timer()
-        self.name=name
-        self.position=Position(coords)
-        self.base=[pygame.image.load(x) for x in (paths_to_assets if type(paths_to_assets)!=str else [paths_to_assets])]
-        self.rotation=degrees_of_rotation
-        self.sprite_num=sprite_num
-        self.size=size_tuple
-        if size_tuple=="":
-            self.size=self.base[sprite_num-1].get_size()
+    def __init__(self, coords, paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, name="generic", sprite_num=1):
+        self.position = Position(coords, True)
+        self.base_images=[pygame.image.load(x) for x in (paths_to_assets if type(paths_to_assets)!=str else [paths_to_assets])]
+        self.sprite = lambda: self.base_images[self.sprite_num-1]
+        self.size = (size_tuple if size_tuple!=chr(0) else self.sprite().get_size())
         self.true_size=self.size
-        self.icon=pygame.transform.rotate(pygame.transform.scale(self.base[self.sprite_num-1], self.size), self.rotation)
-        screen.blit(self.icon, cartesian(self.position))
-        self.flipped=[0, 0]
-        self.block=False
-        "" #a function that is essential to the class, defining initial attributes.
-
-    def reinit(self):
-        pt=pygame.transform
-        self.icon=pt.flip(pt.rotate(pt.scale(self.sprite(), self.size), self.rotation), self.flipped[0], self.flipped[1])
-        "" #a function that updates the element's icon to match changes in attributes. Generally called by other function.
+        self.icon=lambda: pygame.transform.flip(pygame.transform.rotate(pygame.transform.scale(self.sprite(), self.size), self.rotation), self.flipped[0], self.flipped[1])
+        self.flipped=Position(False, False)
+        self.solid=False
+        self.name=name
+        self.velocity=Vector(0, 0)
 
     def rotate(self, degrees_to_rotate):
         self.rotation+=degrees_to_rotate
         self.rotation=self.rotation%360
-        self.reinit()
         "" #a function that offsets the rotaton of the element, and then updates its icon.
 
     def set_angle(self, degrees_of_rotation):
         self.rotation=degrees_of_rotation
-        self.reinit()
         "" #a function that sets the rotation of the element, then updates its icon
 
     def resize(self, new_size=(75, 75), relative=False, true_size=False):
@@ -130,7 +108,6 @@ class Element:
             if true_size: self.true_size=new_size
         else:
             raise ValueError("Size must be positive!")
-        self.reinit()
         "" #a function that changes the size attribute of the element, then updates its icon.
 
     def rescale(self, scaleX, scaleY=-100, true=True):
@@ -138,19 +115,44 @@ class Element:
             scaleY=scaleX #use common ratio to scale
         if scaleX>0: #if scaleY was specified
             self.resize((self.size[0]*scaleX, self.size[1]*scaleY), true_size=true)
-            self.reinit()
         else: #if scaleX was invalid
             raise ValueError("Size must be positive!")
         "" #a function that changes the height and width of an element by a common ratio, then updates its icon.
 
+    def anim(self):
+        if self.anim_timer.time()>=0.15:
+            self.anim_timer.reset()
+            self.sprite_num = (self.sprite_num+1 if self.sprite_num<len(self.base) else 1)
+
+    def rect(self):
+        top_left = Position(self.position.x-self.size[0]/2, self.position.y-self.size[1]/2)
+        bottom_right = Position(self.position.x+self.size[0]/2, self.position.y+self.size[1]/2)
+        return top_left, bottom_right
+
+    def in_rect(self):
+        pass
+        #COMPLETE THIS TO ACTUALLY DO STUFF PLS
+
     def show_hitbox(self):
-        a, b = (self.rect()[0][0], self.rect()[1][0])
-        c, d = (self.rect()[0][-1], self.rect()[1][-1])
+        a, b = (self.rect()[0].x, self.rect()[0].y)
+        c, d = (self.rect()[1].x, self.rect()[1].y)
         Element((a, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
         Element((c, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
         Element((c, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
         Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
 
+    def check_clicked(self):
+        if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
+            self.click_timer.reset()
+            mouse_coords=pygame.mouse.get_pos()
+            #COMPLETE THIS TO ACTUALLY DO STUFF PLS
+
+    def place(self, coords=chr(0), SURF=screen): 
+        if coords==chr(0): #if coordinates not specified
+            coords=self.position #use Element's stored coordinates
+        if self.name in debug[3]: print(f"Name: {self.name}, CPos: {coords}, Pos: {cartesian(coords)}")
+        SURF.blit(self.icon, coords.tup()) #place element using cartesian coordinates
+        "" #a function to place Elements on the SURFace
     "" #the base class for all elements
 
 class Player(Element):

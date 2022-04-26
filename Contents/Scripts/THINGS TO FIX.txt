@@ -38,3 +38,6 @@ PressShow() (Needs to be implemented, indicates if a key is collected
 Flip() (revise??)
 Game() (Definitely revise!!!!! the looping stuff is fucked!)
 NEED TO GET COLOURS TO ACTUALLY BE GOOD LOLOLOLOLOL
+from mpmath import mp
+mp.dps = 30    # set number of digits
+print(mp.pi)
