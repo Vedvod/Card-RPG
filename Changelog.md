@@ -50,7 +50,7 @@ Though not directly related to this project, I have made several concepts that m
   - The duration is rounded, eliminating the incomplete periods problem. Since the sine waves have a high frequency, the change in duration is negligible.
 
 ### 2022-02-08
-- I did further work on the music creation concept, making a script that converts an input tuple into a WAVE file.   - This was used to create reditions of Star Spangled Banner using the three variants. 
+- I did further work on the music creation concept, making a script that converts an input tuple into a WAVE file.   - This was used to create renditions of Star Spangled Banner using the three variants. 
   - This will possibly allow me to add user interaction to this process, maybe eventually allowing the user to make their own music in the game.
 
 ## Alpha 2: Resizing and spacial mapping
@@ -118,7 +118,7 @@ To test if two elements overlap.
 
 ### 2022-03-02
 - I added clicking detection (unsure of usage for now).
-- I optimised some code relating to the `Timer`, making implementation smoother.
+- I optimised some code relating to the `Timer` class, making the implementation smoother.
 - I added all the directional keys and set up a basis for an `anim_loop()` function, in order to have a collection animation.
 
 ### 2022-03-03
@@ -147,7 +147,7 @@ To test if two elements overlap.
 - I renamed the repo to Keyless Karlsson, since I have abandoned the card game idea
 - I tidied up some debug things
 
-## Beta 1.2: Unification
+## Beta 1.2: Unification (and Flippers)
 ### 2022-03-15
 - I merged all game loops and functions under a master `Game` class.
   - This greatly improves intercommunication across the game, as well as adding further structure to the code
@@ -158,7 +158,7 @@ To test if two elements overlap.
 ### 2022-03-21
 - I added a charging animation to the flippers to indicate when the cooldown is finished.
 - I redesigned Karl to actually look ok.
-- I implemented a rough and imcomplete version of blocking.
+- I implemented a rough and incomplete version of blocking.
   - I will make it work later.
 
 ### 2022-04-25
@@ -166,6 +166,7 @@ To test if two elements overlap.
 - I gutted my entire project, and made a long list of functions to rewrite and completely remake. 
   - This rewrite gives me the chance to reimplement the `Position` class :)
 
+## Beta 1.3: Perestroika
 ### 2022-04-26
 - I started rewriting the `Element` class, implementing the `Position` class and a new `Vector` class. 
   - I removed some functions that were obsoleted by these two new classes, making the code overall cleaner

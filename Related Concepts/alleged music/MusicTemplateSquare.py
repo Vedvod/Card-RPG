@@ -31,7 +31,7 @@ for n, a in enumerate(l, 1):
     except:
         a, dur = octave(a[0]), 1
     a=int(eval(str(a).strip("a")))
-    sound_array+=(w:=(m4a(dur, a)+[0 for i in range(int(dur/4*44000))]))
+    sound_array+=(w:=(m4a(dur, a)+[0 for i in range(int(dur/8*44000))]))
     print(f"Note {n} of {len(l)} translated!")
     print(f"It has been {comp_timer.time()} seconds since composition began!")
     #plt.plot(w); plt.show()

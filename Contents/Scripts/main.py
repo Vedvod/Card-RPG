@@ -1,10 +1,10 @@
 debug=[
- 0, #show frame start/end
+ 1, #show frame start/end
  0, #print rect coords
  1, #display hitboxes
  [""], #place()
- 0] #player position
-
+ 1] #player position
+fps=50 #framerate
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame
 x, y = (0, 30); os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y) #sets the position of the screen
@@ -23,20 +23,11 @@ screen = pygame.display.set_mode((display_size[0]//s, display_size[1]//s), pygam
 #-----------------------function(s)-----------------------
 found=lambda x: x in found_keys #shorthand for brevity
 pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key pressed
-def show_hitbox(self):
-    a, b = (self.rect()[0][0], self.rect()[1][0])
-    c, d = (self.rect()[0][-1], self.rect()[1][-1])
-    Element((a, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
-    Element((c, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
-    Element((c, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
-    Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
-
 
 def con(self): #temporary controls function, almost same as template one
-    if debug[4]: print(self.position)
+    if debug[4]: print(f"Player's position is {self.position.tup()}") #################################################VRUEOFN WJLKNWVDKJS JIIUNEWJKDVSLIUNJWKD SAMCKJIONJK###################################################
     if debug[2]: #shows hitboxes
-        show_hitbox(self)
-    speed=self.speed
+        self.show_hitbox()
     if self.blocked[0]:
         x, y = -self.last[0], -self.last[1]
         try:
@@ -51,54 +42,59 @@ def con(self): #temporary controls function, almost same as template one
         return
     x, y = 0, 0 #zero vector
     if pressed("LEFT") and found("A"):
-        x-=speed
+        x-=self.speed
     if pressed("RIGHT") and found("D"):
-        x+=speed
+        x+=self.speed
     if pressed("DOWN") and found("S"):
-        y-=speed
+        y+=self.speed
     if pressed("UP") and found("W"):
-        y+=speed
-    x*=(-1)**self.flipped[0]
-    y*=(-1)**self.flipped[1]
-    #all above creates the vector in x and y
-    _=self.circle_movement((x, -y), speed)[1] #use the circle_movement function to create a vector with constant magnitude in direction of above
-    if self.game.block_check((self.rect()[0]+_[0], self.rect()[1]+_[1])): print("g")
-    if (x, y)!=(0, 0): self.move(_[0], _[1]) #if zero vector (nothing pressed), do nothing
-    #wraps by default
+        y-=self.speed
+    print(f"x, y is {x, y}")
+    print(self.flipped.tup())
+    x*=(-1)**self.flipped.x
+    y*=(-1)**self.flipped.y
+    ###all above creates the vector in x and y###
+    match (x, y):
+        case (0, 0): _=Vector(0, 0); print("a")
+        case (x, y): _=(Vector(x, y).unit()*self.speed) #create a vector with magnitude speed in direction of above
+    print(f"The controls vector is {_.tup()}")
+    if self.block_check(): print("g")
+    self.velocity+=_ #if zero vector (nothing pressed), do nothing
+    #wrap-\/-\/-\/-\/-\/-\/
     w, h = pygame.display.get_surface().get_size() #screen size
-    if self.position[0]<-w/2: #if at left side of screen
-        self.move((w+1), 0) #move to right side
-    elif self.position[0]>w/2: #if at right side
-        self.move((-w+1), 0) #move to left side
-    if self.position[1]<-h/2: #if at top of screen
-        self.move(0, (h-1)) #move to bottom
-    elif self.position[1]>h/2: #if at bottom
-        self.move(0, (-h+1)) #move to top
-    self.place() #place the player
+    if self.position.x<0: #if at left side of screen
+        self.move(Vector((w+1), 0)) #move to right side
+    elif self.position.x>w: #if at right side
+        self.move(Vector((-w+1), 0)) #move to left side
+    if self.position.y<0: #if at top of screen
+        self.move(Vector(0, (h-1))) #move to bottom
+    elif self.position.y>h: #if at bottom
+        self.move(Vector(0, (-h+1))) #move to top
+    #self.place() #place the player
     self.last=(x, y)
 
 Player.controls=con #override default controls with new ones
 
 #--------------------------loops--------------------------
 
-def changColor(image, color):
+def changColor(image, color): #from stackoverflow lmao
     colouredImage = pygame.Surface(image.get_size())
     colouredImage.fill(color)
     
     finalImage = image.copy()
-    finalImage.blit(colouredImage, (0, 0), special_flags = pygame.BLEND_MULT)
+    finalImage.blit(colouredImage, (0, 0), special_flags = pygame.BLEND_MULT) #????????????????????????????????????
     return finalImage
 
 #-------------------------classes-------------------------
 class Key(Element):
-    def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0):
-        super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation)
-        self.name=key_name+" key"
+    def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, sprite_num=1, name=""):
+        super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation, sprite_num)
+        self.name=key_name+" key"+name
         self.key=key_name.upper()
         self.player=Player()
         self.game=Game()
     
-    def kill(self):
+    def kill(self): 
         game.elements.remove(self)
 
     def collide(self):
@@ -108,8 +104,8 @@ class Key(Element):
         self.kill()
         
     def rect_check(self):
-        if debug[2]: show_hitbox(self)
-        if set(self.rect()[0])&set(self.player.rect()[0]) and set(self.rect()[1])&set(self.player.rect()[1]): self.collide(); return True
+        if debug[2]: self.show_hitbox()
+        if self.in_rect(self.player): self.collide(); return True
 
 class PressShow(Element):
     pass
@@ -155,13 +151,13 @@ class Flip(Element):
         a, b = (self.rect()[0][0], self.rect()[1][0])
         c, d = (self.rect()[0][-1], self.rect()[1][-1])
         if debug[2]:
-            show_hitbox(self)
+            self.show_hitbox()
         if set(self.rect()[0])&set(self.player.rect()[0]) and set(self.rect()[1])&set(self.player.rect()[1]):
             self.player.blocked=True, self
             self.collide()
             return True
         
-            
+
 class Game:
     def __init__(self, elements=list(), player=Player()):
         self.elements=elements
@@ -171,25 +167,26 @@ class Game:
         self.player=player
         self.respawners=[]
 
-    def block_check(self, rect):
-        block_list=[]
-        for i in self.elements:
-            if i.block:
-                block_list.append(i)
-        for i in block_list:
-            if set(i.rect()[0])&set(rect[0]) and set(i.rect()[1])&set(rect[1]): print("f") #checks if player is blocked by collision
-
     def base_loop_start(self, list_of_elements, i, colour): #ALWAYS DO t=base_loop_start
         if debug[0]: print(f"frame {i}")
         t=Timer()
         screen.fill(colour.out())
         for a in list_of_elements:
+            a.anim()
             if debug[1]: print(a.name)
+            a.move()
+            print(a.velocity.tup())
+            a.velocity = Vector(0, 0)
             a.place()
         return t
     def base_loop_end(self, t, i): #ALWAYS DO return base_loop_end
-        self.player.anim()
-        self.player.place()
+        pl=self.player
+        print("player")
+        pl.anim()
+        pl.move()
+        print(pl.velocity.tup())
+        pl.velocity = Vector(0, 0)
+        pl.place()
         pygame.display.flip()
         if debug[0]: print(f"{t.time()*1000} milliseconds\nframe {i} end\n")
         pygame.time.delay(int(1000/fps - t.time()))
@@ -257,7 +254,7 @@ class Game:
 
 #--------------------------setup--------------------------
 for i in "1":
-    found_keys="a".upper() #the keys the player can use
+    found_keys="wasd".upper() #the keys the player can use
     #the_player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
     W=Key(coords=(100, 300), key_name="w") 
     D=Key(coords=(0, 91), key_name="d")
@@ -265,10 +262,9 @@ for i in "1":
     F=Flip((-250, 160), "x")
     F2=Flip((330, 250), "y")
     #collectable keys
-    trombone=play(get_target("GameAssets.lnk")+"\sounds\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
-    back_mus=play(get_target("GameAssets.lnk")+"\sounds\quieter.wav"); back_mus.stop(); back_mus.play(-1)
+    trombone=play(get_target("GameAssets.lnk")+"\Sounds\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
+    back_mus=play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav"); back_mus.stop(); back_mus.play(-1)
     #sounds
-    fps=100 #framerate
 
 #------------------------main line------------------------
 ended=False

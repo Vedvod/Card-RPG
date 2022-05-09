@@ -1,4 +1,4 @@
- #-------------------------modules-------------------------
+#-------------------------modules-------------------------
 import os, random, time, sys, math, cmath, pygame, numpy as np
 pygame.init(); os.system("cls"); print("pygame 2.6.9 (SDL 2.0.22, Python 3.11.5)")
 display_size=list(pygame.display.get_desktop_sizes()[0])
@@ -36,36 +36,59 @@ class Position:
     def __init__(self, real_coords, cartesian=False):
         self.x = real_coords[0]
         self.y = real_coords[1]
-        if cartesian:
+        if cartesian: #flag for putting in incorrectly formatted coords
             w, h = pygame.display.get_surface().get_size()
             self.x+=w/2
             self.y=h/2-self.y
+        "" 
 
     def cartesian(self):
         w, h = pygame.display.get_surface().get_size() #find the size of the screen
         return Position((self.x-w/2, h/2-self.y))  #use width/2 and height/2 as the origin, rather than the top left
-        "" #a function to move the origin to the middle of the screen
+        "" #returns a Position where the origin is shifted to the middle of the screen
 
     def tup(self):
         return self.x, self.y
+        "" #returns the coords in form (x, y)
+    "" #a class to track (SDL-formatted) positions
+
 
 class Vector:
-    def __init__(self, x=0, y=0, polar=False):
+    def __init__(self, x=0, y=0, polar=False, name="vector"):
+        self.name=name
         self.i=x
         self.j=y
         if polar:
             self.i, self.j = (_:=cmath.rect(x, y)).real, _.imag
-        self.angle = math.atan(self.j/self.i)
+        match (self.i, self.j):
+            case (0, 0): self.angle = 0
+            case (0, j): self.angle = (j/abs(j))*math.pi/2+math.pi; print("EXCLAMATION!!!", j, (j/abs(j)), (j/abs(j))*math.pi/2+math.pi)
+            case _: self.angle = math.atan(self.j/self.i)+(math.pi if self.i<=0 and self.j >=0 else 0)
+        if self.name == "player": print(self.angle)
         self.magnitude = (self.i**2+self.j**2)**0.5
-
+    
     def unit(self):
-        return Vector(_:=(1/(math.tan(self.angle)**2+1)**0.5), _*math.tan(self.angle))
-
+        print(f"angle is {self.angle*180/math.pi}")
+        return Vector (0, 0, name=self.name) #Vector(_:=(1/(math.tan(self.angle)**2+1)**0.5)*(-1)**(self.i<0), _*math.tan(self.angle), name=self.name)
+    
     def tup(self): 
         return self.i, self.j
-
+    
     def movement(self, position):
         return Position((position.x+self.i, position.y+self.j))
+    
+    def __mul__(self, scalar):
+        return Vector(self.i*scalar, self.j*scalar, name=self.name)
+    
+    def __add__(self, v2):
+            return Vector(self.i+v2.i, self.j+v2.j, name=self.name)
+
+    def __getitem__(self, axis):
+        if axis.lower() in "xy":
+            n = ("i" if axis.lower() == "x" else "j")
+            return eval(f"""self.{n}""")
+        else: raise ValueError
+
 
 class Timer:
     def __init__(self): #initialise the time
@@ -75,18 +98,22 @@ class Timer:
     def reset(self):
         self.start_time=time.time()
 
+
 class Element:
-    def __init__(self, coords, paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, name="generic", sprite_num=1):
+    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, sprite_num=1, name="generic"):
         self.position = Position(coords, True)
         self.base_images=[pygame.image.load(x) for x in (paths_to_assets if type(paths_to_assets)!=str else [paths_to_assets])]
+        self.sprite_num=sprite_num
         self.sprite = lambda: self.base_images[self.sprite_num-1]
         self.size = (size_tuple if size_tuple!=chr(0) else self.sprite().get_size())
         self.true_size=self.size
-        self.icon=lambda: pygame.transform.flip(pygame.transform.rotate(pygame.transform.scale(self.sprite(), self.size), self.rotation), self.flipped[0], self.flipped[1])
-        self.flipped=Position(False, False)
+        self.icon=lambda: pygame.transform.flip(pygame.transform.rotate(pygame.transform.scale(self.sprite(), self.size), self.rotation), self.flipped.x, self.flipped.y)
+        self.flipped=Position((False, False))
         self.solid=False
         self.name=name
-        self.velocity=Vector(0, 0)
+        self.velocity=Vector(0, 0, name=self.name)
+        self.rotation=degrees_of_rotation
+        self.anim_timer=Timer()
 
     def rotate(self, degrees_to_rotate):
         self.rotation+=degrees_to_rotate
@@ -122,16 +149,19 @@ class Element:
     def anim(self):
         if self.anim_timer.time()>=0.15:
             self.anim_timer.reset()
-            self.sprite_num = (self.sprite_num+1 if self.sprite_num<len(self.base) else 1)
+            self.sprite_num = (self.sprite_num+1 if self.sprite_num<len(self.base_images) else 1)
 
     def rect(self):
-        top_left = Position(self.position.x-self.size[0]/2, self.position.y-self.size[1]/2)
-        bottom_right = Position(self.position.x+self.size[0]/2, self.position.y+self.size[1]/2)
+        top_left = Position((self.position.x-self.size[0]/2, self.position.y-self.size[1]/2))
+        bottom_right = Position((self.position.x+self.size[0]/2, self.position.y+self.size[1]/2))
         return top_left, bottom_right
 
-    def in_rect(self):
-        pass
-        #COMPLETE THIS TO ACTUALLY DO STUFF PLS
+    def in_rect(self, to_check):
+        a, b = self.rect() #unpack the self rect tuple such that a is top left, b is bottom right
+        c, d = to_check.rect() #unpack the target rect tuple such that c is top left, d is bottom right
+        return ((a.x <= c.x <= b.x) and (a.y <= c.y <= b.y))
+        #raise EOFError
+        #return True or False
 
     def show_hitbox(self):
         a, b = (self.rect()[0].x, self.rect()[0].y)
@@ -147,20 +177,23 @@ class Element:
             mouse_coords=pygame.mouse.get_pos()
             #COMPLETE THIS TO ACTUALLY DO STUFF PLS
 
+    def move(self, vec=chr(0)):
+        if vec==chr(0): vec = self.velocity
+        self.position=vec.movement(self.position)
+
     def place(self, coords=chr(0), SURF=screen): 
         if coords==chr(0): #if coordinates not specified
             coords=self.position #use Element's stored coordinates
         if self.name in debug[3]: print(f"Name: {self.name}, CPos: {coords}, Pos: {cartesian(coords)}")
-        SURF.blit(self.icon, coords.tup()) #place element using cartesian coordinates
+        SURF.blit(self.icon(), coords.tup()) #place element using cartesian coordinates
         "" #a function to place Elements on the SURFace
     "" #the base class for all elements
 
 class Player(Element):
-    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, sprite_num=1, name="", speed=50):
-        super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num)
-        self.anim_timer=Timer()
-        self.name=name
-        self.blocked=False, 1
+    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, sprite_num=1, name="somePlayer", speed=50):
+        super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num, name)
+        self.blocked=0, 0
+        self.speed=speed
 
     pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key pressed
     def controls(self, wrap=False): 
@@ -189,6 +222,13 @@ class Player(Element):
                 self.move(0, -h+1) #move to top
         self.place() #place the player
 
+    def block_check(self): ###########################################################################################################################################################
+        block_list=[]
+        for i in self.game.elements:
+            if isinstance(i, Flip):
+                if self.in_rect(i): return True #checks if player is blocked by collision
+
+    
 
 if os.path.basename(__file__)=="PyGameTemplate.py":
     #me=Player(coords=(0, 30), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _))
