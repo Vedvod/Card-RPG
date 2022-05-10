@@ -60,16 +60,12 @@ class Vector:
         self.j=y
         if polar:
             self.i, self.j = (_:=cmath.rect(x, y)).real, _.imag
-        match (self.i, self.j):
-            case (0, 0): self.angle = 0
-            case (0, j): self.angle = (j/abs(j))*math.pi/2+math.pi; print("EXCLAMATION!!!", j, (j/abs(j)), (j/abs(j))*math.pi/2+math.pi)
-            case _: self.angle = math.atan(self.j/self.i)+(math.pi if self.i<=0 and self.j >=0 else 0)
+        self.magnitude, self.angle = cmath.polar(complex(self.i, self.j))
         if self.name == "player": print(self.angle)
-        self.magnitude = (self.i**2+self.j**2)**0.5
     
     def unit(self):
         print(f"angle is {self.angle*180/math.pi}")
-        return Vector (0, 0, name=self.name) #Vector(_:=(1/(math.tan(self.angle)**2+1)**0.5)*(-1)**(self.i<0), _*math.tan(self.angle), name=self.name)
+        return Vector(math.cos(self.angle), math.sin(self.angle), name=self.name)
     
     def tup(self): 
         return self.i, self.j
