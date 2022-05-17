@@ -1,7 +1,7 @@
 debug=[
  1, #show frame start/end
  0, #print rect coords
- 1, #display hitboxes
+ 0, #display hitboxes
  [""], #place()
  1] #player position
 fps=50 #framerate
@@ -26,8 +26,6 @@ pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key 
 
 def con(self): #temporary controls function, almost same as template one
     if debug[4]: print(f"Player's position is {self.position.tup()}") #################################################VRUEOFN WJLKNWVDKJS JIIUNEWJKDVSLIUNJWKD SAMCKJIONJK###################################################
-    if debug[2]: #shows hitboxes
-        self.show_hitbox()
     if self.blocked[0]:
         x, y = -self.last[0], -self.last[1]
         try:
@@ -50,7 +48,6 @@ def con(self): #temporary controls function, almost same as template one
     if pressed("UP") and found("W"):
         y-=self.speed
     print(f"x, y is {x, y}")
-    print(self.flipped.tup())
     x*=(-1)**self.flipped.x
     y*=(-1)**self.flipped.y
     ###all above creates the vector in x and y###
@@ -104,7 +101,6 @@ class Key(Element):
         self.kill()
         
     def rect_check(self):
-        if debug[2]: self.show_hitbox()
         if self.in_rect(self.player): self.collide(); return True
 
 class PressShow(Element):
@@ -149,10 +145,10 @@ class Flip(Element):
         
     def rect_check(self):
         a, b = (self.rect()[0][0], self.rect()[1][0])
+        print(a)
         c, d = (self.rect()[0][-1], self.rect()[1][-1])
-        if debug[2]:
-            self.show_hitbox()
-        if set(self.rect()[0])&set(self.player.rect()[0]) and set(self.rect()[1])&set(self.player.rect()[1]):
+
+        if self.in_rect(self.player):
             self.player.blocked=True, self
             self.collide()
             return True
@@ -173,7 +169,9 @@ class Game:
         screen.fill(colour.out())
         for a in list_of_elements:
             a.anim()
-            if debug[1]: print(a.name)
+            if debug[1]: print([i.tup() for i in a.rect()])
+            if debug[2]: #shows hitboxes
+                a.show_hitbox()
             a.move()
             print(a.velocity.tup())
             a.velocity = Vector(0, 0)

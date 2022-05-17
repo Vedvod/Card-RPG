@@ -155,17 +155,22 @@ class Element:
     def in_rect(self, to_check):
         a, b = self.rect() #unpack the self rect tuple such that a is top left, b is bottom right
         c, d = to_check.rect() #unpack the target rect tuple such that c is top left, d is bottom right
-        return ((a.x <= c.x <= b.x) and (a.y <= c.y <= b.y))
+        Element((a.cartesian().tup()), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+        Element((b.cartesian().tup()), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+        Element((c.cartesian().tup()), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+        Element((d.cartesian().tup()), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+        return (((c.x <= a.x <= d.x) and (c.y <= a.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= b.y <= d.y)))
         #raise EOFError
         #return True or False
 
     def show_hitbox(self):
-        a, b = (self.rect()[0].x, self.rect()[0].y)
-        c, d = (self.rect()[1].x, self.rect()[1].y)
-        Element((a, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
-        Element((c, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
-        Element((c, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
-        Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+        pass
+    #    a, b = (self.rect()[0].x, self.rect()[0].y)
+    #    c, d = (self.rect()[1].x, self.rect()[1].y)
+    #    Element((a, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+    #    Element((c, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+    #    Element((c, b), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
+    #    Element((a, d), get_target("GameAssets.lnk")+r"\marker.png", (2, 2)).place()
 
     def check_clicked(self):
         if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
@@ -180,8 +185,9 @@ class Element:
     def place(self, coords=chr(0), SURF=screen): 
         if coords==chr(0): #if coordinates not specified
             coords=self.position #use Element's stored coordinates
-        if self.name in debug[3]: print(f"Name: {self.name}, CPos: {coords}, Pos: {cartesian(coords)}")
-        SURF.blit(self.icon(), coords.tup()) #place element using cartesian coordinates
+        #print(self.name)
+        if self.name in debug[3]: print(f"Name: {self.name}, Pos: {coords.tup()}")
+        SURF.blit(self.icon(), (coords.x-self.size[0]/2, coords.y-self.size[1]/2)) #place element using cartesian coordinates
         "" #a function to place Elements on the SURFace
     "" #the base class for all elements
 
