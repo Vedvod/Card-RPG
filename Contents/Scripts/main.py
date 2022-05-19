@@ -1,9 +1,9 @@
 debug=[
  1, #show frame start/end
- 0, #print rect coords
- 0, #display hitboxes
+ 1, #print rect coords
+ 1, #display hitboxes
  [""], #place()
- 1] #player position
+ 0] #player position
 fps=50 #framerate
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame
@@ -168,7 +168,6 @@ class Game:
         t=Timer()
         screen.fill(colour.out())
         for a in list_of_elements:
-            a.anim()
             if debug[1]: print([i.tup() for i in a.rect()])
             if debug[2]: #shows hitboxes
                 a.show_hitbox()
@@ -182,7 +181,7 @@ class Game:
         print("player")
         pl.anim()
         pl.move()
-        print(pl.velocity.tup())
+        pl.show_hitbox()
         pl.velocity = Vector(0, 0)
         pl.place()
         pygame.display.flip()
