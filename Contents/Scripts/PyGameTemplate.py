@@ -110,6 +110,7 @@ class Element:
         self.velocity=Vector(0, 0, name=self.name)
         self.rotation=degrees_of_rotation
         self.anim_timer=Timer()
+        self.click_timer=Timer()
 
     def rotate(self, degrees_to_rotate):
         self.rotation+=degrees_to_rotate
@@ -155,7 +156,7 @@ class Element:
     def in_rect(self, to_check):
         a, b = self.rect() #unpack the self rect tuple such that a is top left, b is bottom right
         c, d = to_check.rect() #unpack the target rect tuple such that c is top left, d is bottom right
-        return (((c.x <= a.x <= d.x) and (c.y <= a.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= b.y <= d.y)))
+        return (((c.x <= a.x <= d.x) and (c.y <= a.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= b.y <= d.y))) or (((c.x <= a.x <= d.x) and (c.y <= b.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= a.y <= d.y)))
         #raise EOFError
         #return True or False
 
@@ -171,6 +172,7 @@ class Element:
         if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
             self.click_timer.reset()
             mouse_coords=pygame.mouse.get_pos()
+            print("a")
             #COMPLETE THIS TO ACTUALLY DO STUFF PLS
 
     def move(self, vec=chr(0)):

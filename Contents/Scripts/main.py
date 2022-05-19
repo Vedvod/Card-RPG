@@ -19,13 +19,13 @@ for c in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
 print(f"your screen size is {display_size}.")
 s=1; #screen = pygame.display.set_mode((int(display_size[0]/s), int(display_size[1]/s)), pygame.RESIZABLE, pygame.SCALED) #set up the pygame screen
 screen = pygame.display.set_mode((display_size[0]//s, display_size[1]//s), pygame.RESIZABLE, pygame.SCALED) #set up the pygame screen
- 
+FPStimer = Timer()
 #-----------------------function(s)-----------------------
 found=lambda x: x in found_keys #shorthand for brevity
 pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key pressed
 
 def con(self): #temporary controls function, almost same as template one
-    if debug[4]: print(f"Player's position is {self.position.tup()}") #################################################VRUEOFN WJLKNWVDKJS JIIUNEWJKDVSLIUNJWKD SAMCKJIONJK###################################################
+    if debug[4]: print(f"Player's position is {self.position.tup()}") 
     if self.blocked[0]:
         x, y = -self.last[0], -self.last[1]
         try:
@@ -35,8 +35,8 @@ def con(self): #temporary controls function, almost same as template one
             pass
         #print(self.last, self.flipped, "left" if pressed("LEFT") else "right")
         self.blocked=False, 0
-        _=self.circle_movement((x, -y), speed)[1] #use the circle_movement function to create a vector with constant magnitude in direction of above
-        self.move(_[0], _[1])
+        _=(Vector(x, y).unit()*self.speed) #use the circle_movement function to create a vector with constant magnitude in direction of above
+        self.velocity+=_
         return
     x, y = 0, 0 #zero vector
     if pressed("LEFT") and found("A"):
@@ -68,7 +68,7 @@ def con(self): #temporary controls function, almost same as template one
     elif self.position.y>h: #if at bottom
         self.move(Vector(0, (-h+1))) #move to top
     #self.place() #place the player
-    self.last=(x, y)
+    self.last=(_.i, _.j)
 
 Player.controls=con #override default controls with new ones
 
@@ -137,22 +137,21 @@ class Flip(Element):
         self.game.respawners.append(self)
 
     def collide(self):
-        if self.active and self.active==2:
-            if debug[0]: print("collided")
+        if self.active==2:
+            if debug[0]: print("collidedFKDVM")
+            raise ValueError
             self.player.flipped[self.axis]=not self.player.flipped[self.axis]
             self.kill()
         self.reinit()
         
     def rect_check(self):
-        a, b = (self.rect()[0][0], self.rect()[1][0])
-        print(a)
-        c, d = (self.rect()[0][-1], self.rect()[1][-1])
+        print("absdsuijcodjsihu hbnjeicdjisaounjk")
 
         if self.in_rect(self.player):
             self.player.blocked=True, self
             self.collide()
             return True
-        
+       
 
 class Game:
     def __init__(self, elements=list(), player=Player()):
@@ -169,8 +168,7 @@ class Game:
         screen.fill(colour.out())
         for a in list_of_elements:
             if debug[1]: print([i.tup() for i in a.rect()])
-            if debug[2]: #shows hitboxes
-                a.show_hitbox()
+            if debug[2]: a.show_hitbox() #shows 
             a.move()
             print(a.velocity.tup())
             a.velocity = Vector(0, 0)
@@ -195,11 +193,13 @@ class Game:
     def anim_loop(self, list_of_elements, i, colour=(132, 30, 95), frames=100, final_scale=1.5):
         colour=self.rainbow(colour) #change colour across cyclic rainbow spectrum
         t=self.base_loop_start(list_of_elements, c, colour)
-        #self.player.rescale(final_scale**(1/frames))
+        self.player.rescale(final_scale**(1/frames))
         return self.base_loop_end(t, i) 
         "" #triggers upon collection of key
 
+
     def rainbow(self, colour):
+        return colour
         global max_val
         for c in [colour.r, colour.b, colour.g]:
             if c.tick%1!=0:
@@ -223,7 +223,7 @@ class Game:
         for i in list_of_elements:
             if type(i)==Key: collect_1.append(i.rect_check())
             else: 
-                try: i.rect_check()
+                try: print("abcdefghijklmnop", i.name); i.rect_check(); print(i.name)
                 except: i.place()
         act[1]=True in collect_1
         if debug[0]: print("player")
@@ -245,7 +245,7 @@ class Game:
                     if i:
                         act[i]=0
                         if n==1:
-                            for e in range(frames:=75):
+                            for e in range(frames:=150):
                                 if not ended and loop[1](elements, c, colour, frames, 1.25):
                                         ended=1
 
