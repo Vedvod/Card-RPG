@@ -103,8 +103,8 @@ class Element:
         self.sprite = lambda: self.base_images[self.sprite_num-1]
         self.size = (size_tuple if size_tuple!=chr(0) else self.sprite().get_size())
         self.true_size=self.size
-        self.icon=lambda: pygame.transform.flip(pygame.transform.rotate(pygame.transform.scale(self.sprite(), self.size), self.rotation), self.flipped.x, self.flipped.y)
         self.flipped=Position((False, False))
+        self.icon=lambda: pygame.transform.flip(pygame.transform.rotate(pygame.transform.scale(self.sprite(), self.size), self.rotation), self.flipped.x, self.flipped.y)
         self.solid=False
         self.name=name
         self.velocity=Vector(0, 0, name=self.name)

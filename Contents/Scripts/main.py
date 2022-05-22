@@ -6,7 +6,7 @@ debug=[
  0] #player position
 fps=50 #framerate
 #-------------------------modules-------------------------
-import os, random, time, sys, math, pygame
+import os, random, time, sys, math, pygame 
 x, y = (0, 30); os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y) #sets the position of the screen
 for c in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
     try: a.append(c) #move onto the next step
@@ -30,7 +30,8 @@ def con(self): #temporary controls function, almost same as template one
         x, y = -self.last[0], -self.last[1]
         try:
             if self.blocked[1].name.startswith("flip") and self.blocked[1].active==2:
-                self.flipped[0]=not self.flipped[0]
+                axis = self.blocked[1].axis
+                exec(f"""self.flipped.{axis}=not self.flipped.{axis}""")
         except:
             pass
         #print(self.last, self.flipped, "left" if pressed("LEFT") else "right")
@@ -109,9 +110,9 @@ class PressShow(Element):
 class Flip(Element):
     def __init__(self, coords, axis="x", name="flip"):
         assert axis.lower() in ("x", "y"), ValueError(f'The given axis is {axis}, but the axis must be "x" or "y"')
-        if axis=="y": self.axis=1
-        if axis=="x": self.axis=0
-        degrees_of_rotation=self.axis*90
+        if axis=="y": self.axis="y"
+        if axis=="x": self.axis="x"
+        degrees_of_rotation=(0 if self.axis=="x" else 90)
         super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Flipper/flipper.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_half_used.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_used.png'], (50, 50), degrees_of_rotation)
         self.name=name
         self.player=Player()
@@ -172,6 +173,7 @@ class Game:
             a.move()
             print(a.velocity.tup())
             a.velocity = Vector(0, 0)
+            print(a.name, a.size, a.rotation, a.flipped.tup())
             a.place()
         return t
     def base_loop_end(self, t, i): #ALWAYS DO return base_loop_end
@@ -251,7 +253,7 @@ class Game:
 
 #--------------------------setup--------------------------
 for i in "1":
-    found_keys="wasd".upper() #the keys the player can use
+    found_keys="a".upper() #the keys the player can use
     #the_player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
     W=Key(coords=(100, 300), key_name="w") 
     D=Key(coords=(0, 91), key_name="d")
