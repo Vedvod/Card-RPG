@@ -1,10 +1,10 @@
 debug=[
  1, #show frame start/end
- 1, #print rect coords
+ 0, #print rect coords
  1, #display hitboxes
  [""], #place()
  0] #player position
-fps=50 #framerate
+fps=60 #framerate
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame 
 x, y = (0, 30); os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y) #sets the position of the screen
@@ -48,20 +48,21 @@ def con(self): #temporary controls function, almost same as template one
         y+=self.speed
     if pressed("UP") and found("W"):
         y-=self.speed
-    print(f"x, y is {x, y}")
+    if debug[4]: print(f"x, y is {x, y}")
     x*=(-1)**self.flipped.x
     y*=(-1)**self.flipped.y
     ###all above creates the vector in x and y###
     match (x, y):
         case (0, 0): _=Vector(0, 0); print("a")
         case (x, y): _=(Vector(x, y).unit()*self.speed) #create a vector with magnitude speed in direction of above
-    print(f"The controls vector is {_.tup()}")
+    if debug[4]: print(f"The controls vector is {_.tup()}")
     if self.block_check(): print("g")
     self.velocity+=_ #if zero vector (nothing pressed), do nothing
     #wrap-\/-\/-\/-\/-\/-\/
     w, h = pygame.display.get_surface().get_size() #screen size
     if self.position.x<0: #if at left side of screen
         self.move(Vector((w+1), 0)) #move to right side
+        room.x+=1
     elif self.position.x>w: #if at right side
         self.move(Vector((-w+1), 0)) #move to left side
     if self.position.y<0: #if at top of screen
@@ -139,14 +140,13 @@ class Flip(Element):
 
     def collide(self):
         if self.active==2:
-            if debug[0]: print("collidedFKDVM")
+            if debug[0]: pass
             raise ValueError
             self.player.flipped[self.axis]=not self.player.flipped[self.axis]
             self.kill()
         self.reinit()
         
     def rect_check(self):
-        print("absdsuijcodjsihu hbnjeicdjisaounjk")
 
         if self.in_rect(self.player):
             self.player.blocked=True, self
@@ -170,10 +170,9 @@ class Game:
         for a in list_of_elements:
             if debug[1]: print([i.tup() for i in a.rect()])
             if debug[2]: a.show_hitbox() #shows 
-            a.move()
-            print(a.velocity.tup())
+            a.move(a.velocity)
             a.velocity = Vector(0, 0)
-            print(a.name, a.size, a.rotation, a.flipped.tup())
+            if a.name in debug[3]: print(a.name, a.size, a.rotation, a.flipped.tup())
             a.place()
         return t
     def base_loop_end(self, t, i): #ALWAYS DO return base_loop_end
@@ -198,7 +197,6 @@ class Game:
         self.player.rescale(final_scale**(1/frames))
         return self.base_loop_end(t, i) 
         "" #triggers upon collection of key
-
 
     def rainbow(self, colour):
         return colour
@@ -225,7 +223,7 @@ class Game:
         for i in list_of_elements:
             if type(i)==Key: collect_1.append(i.rect_check())
             else: 
-                try: print("abcdefghijklmnop", i.name); i.rect_check(); print(i.name)
+                try: i.rect_check()
                 except: i.place()
         act[1]=True in collect_1
         if debug[0]: print("player")
@@ -239,7 +237,7 @@ class Game:
         ended=0
         c=0
         while not ended==True:
-            elements=self.elements
+            elements=self.level_config["room"][room_row][room_column]
             act, ended=loop[0](elements, c, colour, act)
             c+=1
             if True in act:
@@ -265,6 +263,19 @@ for i in "1":
     back_mus=play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav"); back_mus.stop(); back_mus.play(-1)
     #sounds
 
+#SOME FPS COUNTER STUFF NEED TO UPDATE TO FIT WITH NEW FORMAT PLS DO THIS THANKS OK I TRUST YOU!!!
+#myfont = pygame.font.SysFont('comic sans ms', 20)
+#class Text(Element):
+
+#    def __init__(self, path=myfont.render("Default", False, (100, 100, 100)), coords=(0, 0), scale=1, rotate=0):
+#        super().__init__(path, coords, (scale*pygame.Surface.get_size(path)[0], scale*pygame.Surface.get_size(path)[1]), rotate)
+
+#    def reinit(self):
+#        self.size=(scale*pygame.Surface.get_size(self.image)[0], scale*pygame.Surface.get_size(self.image)[1])
+#        self.icon=pygame.transform.rotate(pygame.transform.scale(self.image, self.size), self.spin)
+
+#thing=Text(myfont.render("FPS: 0", False, (0, 0, 200)), (100, 100), 5)
+
 #------------------------main line------------------------
 ended=False
 c=0
@@ -288,7 +299,10 @@ class Colour:
 
 #colour=(132, 30, 95)
 colour = Colour(N(max_val, max_val), N(0, max_val*2), N(0, max_val*3))
-game=Game(
+
+config_data=eval((g:=open(r"level.cfg")).read()) #unpack and assign level configurations
+
+game=Game(config_data)
     [W, D, S, F, F2],
     #[], 
     Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=80, _), name="player")); game.player.speed=game.player.size[0]/15; game.player.game=game
