@@ -85,83 +85,19 @@ def changColor(image, color): #from stackoverflow lmao
     return finalImage
 
 #-------------------------classes-------------------------
-class Key(Element):
-    def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, sprite_num=1, name=""):
-        super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation, sprite_num)
-        self.name=key_name+" key"+name
-        self.key=key_name.upper()
-        self.player=Player()
-        self.game=Game()
-    
-    def kill(self): 
-        game.elements.remove(self)
-
-    def collide(self):
-        if debug[0]: print("collided")
-        global found_keys
-        found_keys+=self.key
-        self.kill()
-        
-    def rect_check(self):
-        if self.in_rect(self.player): self.collide(); return True
-
-class PressShow(Element):
-    pass
-
-class Flip(Element):
-    def __init__(self, coords, axis="x", name="flip"):
-        assert axis.lower() in ("x", "y"), ValueError(f'The given axis is {axis}, but the axis must be "x" or "y"')
-        if axis=="y": self.axis="y"
-        if axis=="x": self.axis="x"
-        degrees_of_rotation=(0 if self.axis=="x" else 90)
-        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Flipper/flipper.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_half_used.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_used.png'], (50, 50), degrees_of_rotation)
-        self.name=name
-        self.player=Player()
-        self.game=Game()
-        self.active=2
-        self.block=True
-    
-    def respawn(self):
-        if self.a.time()>=2 and self.active==0:
-            self.active=1
-            self.sprite_num=3-self.active
-            self.reinit()
-        if self.a.time()>=4 and self.active==1:
-            self.active=2
-            self.sprite_num=3-self.active
-            self.game.respawners.remove(self)
-            self.reinit()
-
-    def kill(self):
-        self.a=Timer()
-        self.active=0
-        self.sprite_num=3-self.active
-        self.game.respawners.append(self)
-
-    def collide(self):
-        if self.active==2:
-            if debug[0]: pass
-            raise ValueError
-            self.player.flipped[self.axis]=not self.player.flipped[self.axis]
-            self.kill()
-        self.reinit()
-        
-    def rect_check(self):
-
-        if self.in_rect(self.player):
-            self.player.blocked=True, self
-            self.collide()
-            return True
-       
-
 class Game:
-    def __init__(self, elements=list(), player=Player()):
-        self.elements=elements
-        for i in elements:
-            i.player=player
-            i.game=self
-        self.player=player
-        self.respawners=[]
+    def __init__(self, data={"start_room":(0, 0), "level_name":"", "background":"", "player":Player(), "rooms":[[[Element()]]]}):
+        self.start=data["start_room"]
+        self.name=data["level_name"]
+        try: self.default_bg=data["background"]
+        except: self.default_bg=data["background_colour"]
+        self.player=data["player"]
+        self.player.game=self
+        self.levels=data["rooms"]
+        self.room_pos=Position(self.start)
+        self.recharging=[]
+        print(self.room_pos.tup())
+        self.onscreen_elements=(elements:=self.levels[self.room_pos.x][self.room_pos.y])
 
     def base_loop_start(self, list_of_elements, i, colour): #ALWAYS DO t=base_loop_start
         if debug[0]: print(f"frame {i}")
@@ -215,10 +151,11 @@ class Game:
         #print(space(a.val), space(b.val), space(c.val))
         return colour
 
-    def main_loop(self, list_of_elements, c, colour, act):
+    def main_loop(self, level_data, c, colour, act):
+        list_of_elements=level_data["elements"]
         t=self.base_loop_start(list_of_elements, c, colour)
-        for i in self.respawners:
-            i.respawn()
+        for i in self.recharging:
+            i.recharge()
         collect_1=[]
         for i in list_of_elements:
             if type(i)==Key: collect_1.append(i.rect_check())
@@ -237,7 +174,8 @@ class Game:
         ended=0
         c=0
         while not ended==True:
-            elements=self.level_config["room"][room_row][room_column]
+            self.onscreen_elements=(elements:=self.levels[self.room_pos.x][self.room_pos.y])
+            print(elements)
             act, ended=loop[0](elements, c, colour, act)
             c+=1
             if True in act:
@@ -248,6 +186,77 @@ class Game:
                             for e in range(frames:=150):
                                 if not ended and loop[1](elements, c, colour, frames, 1.25):
                                         ended=1
+
+
+class Key(Element):
+    def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, sprite_num=1, name="", game=Game()):
+        super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation, sprite_num)
+        self.name=key_name+" key"+name
+        self.key=key_name.upper()
+        self.game=game
+        self.player=self.game.player
+        self.collected=False
+    
+    def kill(self): 
+        self.game.onscreen_elements.remove(self)
+
+    def collide(self):
+        if debug[0]: print("collided")
+        global found_keys
+        found_keys+=self.key
+        self.kill()
+        
+    def rect_check(self):
+        if self.in_rect(self.player): self.collide(); return True
+
+class PressShow(Element):
+    pass
+
+class Flip(Element):
+    def __init__(self, coords, axis="x", name="flip"):
+        assert axis.lower() in ("x", "y"), ValueError(f'The given axis is {axis}, but the axis must be "x" or "y"')
+        if axis=="y": self.axis="y"
+        if axis=="x": self.axis="x"
+        degrees_of_rotation=(0 if self.axis=="x" else 90)
+        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Flipper/flipper.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_half_used.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_used.png'], (50, 50), degrees_of_rotation)
+        self.name=name
+        self.player=Player()
+        self.active=2
+        self.block=True
+    
+    def recharge(self):
+        if self.a.time()>=2 and self.active==0:
+            self.active=1
+            self.sprite_num=3-self.active
+            self.reinit()
+        if self.a.time()>=4 and self.active==1:
+            self.active=2
+            self.sprite_num=3-self.active
+            self.game.recharging.remove(self)
+            self.reinit()
+
+    def kill(self):
+        self.a=Timer()
+        self.active=0
+        self.sprite_num=3-self.active
+        self.game.recharging.append(self)
+
+    def collide(self):
+        if self.active==2:
+            if debug[0]: pass
+            raise ValueError
+            self.player.flipped[self.axis]=not self.player.flipped[self.axis]
+            self.kill()
+        self.reinit()
+        
+    def rect_check(self):
+
+        if self.in_rect(self.player):
+            self.player.blocked=True, self
+            self.collide()
+            return True
+       
+
 
 #--------------------------setup--------------------------
 for i in "1":
@@ -301,11 +310,8 @@ class Colour:
 colour = Colour(N(max_val, max_val), N(0, max_val*2), N(0, max_val*3))
 
 config_data=eval((g:=open(r"level.cfg")).read()) #unpack and assign level configurations
-
 game=Game(config_data)
-    [W, D, S, F, F2],
-    #[], 
-    Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=80, _), name="player")); game.player.speed=game.player.size[0]/15; game.player.game=game
+
 game.wrapper()
 back_mus.stop()
 trombone.play(1)

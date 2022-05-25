@@ -1,4 +1,4 @@
-﻿# Keyless Karlsson: Changelog
+# Keyless Karlsson: Changelog
 This is the changelog of my SDD HSC Major project.
 
 ## Pre-Alpha: Setting up files
@@ -155,7 +155,7 @@ To test if two elements overlap.
 - FLIPPERS! I added the flippers finally, or at least, I added code to implement them. 
   - I changed Karl's sprites to visually indicate right and left.
 
-### 2022-03-21
+### 2022-03-20
 - I added a charging animation to the flippers to indicate when the cooldown is finished.
 - I redesigned Karl to actually look ok.
 - I implemented a rough and incomplete version of blocking.
@@ -173,3 +173,7 @@ To test if two elements overlap.
 - The blocking attribute is now called "solid"
 - I rewrote the rect method to return two `Position`s rather than a `numpy.linspace()`.
 - Overall, the actual main.py functions need to be rewritten for the new format, and the template functions need to be completed and cleaned up.
+
+### 2022-04-27
+- Date of submission
+  - 
