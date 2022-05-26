@@ -61,14 +61,17 @@ def con(self): #temporary controls function, almost same as template one
     #wrap-\/-\/-\/-\/-\/-\/
     w, h = pygame.display.get_surface().get_size() #screen size
     if self.position.x<0: #if at left side of screen
+        if self.game.room_pos.x>0: self.game.room_pos.x-=1
         self.move(Vector((w+1), 0)) #move to right side
-        room.x+=1
     elif self.position.x>w: #if at right side
         self.move(Vector((-w+1), 0)) #move to left side
+        if self.game.room_pos.x<len(self.game.levels)-1: self.game.room_pos.x+=1
     if self.position.y<0: #if at top of screen
         self.move(Vector(0, (h-1))) #move to bottom
+        if self.game.room_pos.y<len(self.game.levels[self.game.room_pos.x])-1: self.game.room_pos.y+=1
     elif self.position.y>h: #if at bottom
         self.move(Vector(0, (-h+1))) #move to top
+        if self.game.room_pos.y>0: self.game.room_pos.y-=1
     #self.place() #place the player
     self.last=(_.i, _.j)
 
@@ -86,26 +89,32 @@ def changColor(image, color): #from stackoverflow lmao
 
 #-------------------------classes-------------------------
 class Game:
-    def __init__(self, data={"start_room":(0, 0), "level_name":"", "background":"", "player":Player(), "rooms":[[[Element()]]]}):
+    def __init__(self, data="""{"start_room":(0, 0), "level_name":"", "background":"", "player":Player(), "rooms":[[{"elements":[Element()]}]]}"""):
+        self.player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=80, _), name="THEplayer")
+        data=eval(data)
+        self.data=data
         self.start=data["start_room"]
         self.name=data["level_name"]
         try: self.default_bg=data["background"]
         except: self.default_bg=data["background_colour"]
-        self.player=data["player"]
+        #self.player=data["player"]
+        print(self.name, self.player.size, self.player.position.tup(), ", ".join([str(x.tup()) for x in self.player.rect()]))
         self.player.game=self
         self.levels=data["rooms"]
         self.room_pos=Position(self.start)
         self.recharging=[]
-        print(self.room_pos.tup())
-        self.onscreen_elements=(elements:=self.levels[self.room_pos.x][self.room_pos.y])
+        self.onscreen_elements=(elements:=self.levels[self.room_pos.x][self.room_pos.y]["elements"])
 
-    def base_loop_start(self, list_of_elements, i, colour): #ALWAYS DO t=base_loop_start
+    def base_loop_start(self, level_data, i, colour): #ALWAYS DO t=base_loop_start
+        print(level_data)
+        list_of_elements = level_data["elements"]
         if debug[0]: print(f"frame {i}")
         t=Timer()
         screen.fill(colour.out())
         for a in list_of_elements:
+            print(a.name, a.position.tup())
             if debug[1]: print([i.tup() for i in a.rect()])
-            if debug[2]: a.show_hitbox() #shows 
+            if debug[2]: a.show_hitbox() #shows bot of hit
             a.move(a.velocity)
             a.velocity = Vector(0, 0)
             if a.name in debug[3]: print(a.name, a.size, a.rotation, a.flipped.tup())
@@ -127,9 +136,9 @@ class Game:
                 return True
         return False
 
-    def anim_loop(self, list_of_elements, i, colour=(132, 30, 95), frames=100, final_scale=1.5):
+    def anim_loop(self, level_data, i, colour=(132, 30, 95), frames=100, final_scale=1.5):
         colour=self.rainbow(colour) #change colour across cyclic rainbow spectrum
-        t=self.base_loop_start(list_of_elements, c, colour)
+        t=self.base_loop_start(level_data, c, colour)
         self.player.rescale(final_scale**(1/frames))
         return self.base_loop_end(t, i) 
         "" #triggers upon collection of key
@@ -153,7 +162,7 @@ class Game:
 
     def main_loop(self, level_data, c, colour, act):
         list_of_elements=level_data["elements"]
-        t=self.base_loop_start(list_of_elements, c, colour)
+        t=self.base_loop_start(level_data, c, colour)
         for i in self.recharging:
             i.recharge()
         collect_1=[]
@@ -174,9 +183,11 @@ class Game:
         ended=0
         c=0
         while not ended==True:
-            self.onscreen_elements=(elements:=self.levels[self.room_pos.x][self.room_pos.y])
+            level_data=self.levels[self.room_pos.x][self.room_pos.y]
+            print(level_data)
+            self.onscreen_elements=(elements:=level_data["elements"])
             print(elements)
-            act, ended=loop[0](elements, c, colour, act)
+            act, ended=loop[0](level_data, c, colour, act)
             c+=1
             if True in act:
                 for n, i in enumerate(act):
@@ -184,24 +195,28 @@ class Game:
                         act[i]=0
                         if n==1:
                             for e in range(frames:=150):
-                                if not ended and loop[1](elements, c, colour, frames, 1.25):
+                                if not ended and loop[1](level_data, c, colour, frames, 1.25):
                                         ended=1
 
 
 class Key(Element):
-    def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, sprite_num=1, name="", game=Game()):
+    def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, sprite_num=1, name="", game=chr(0)):
         super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation, sprite_num)
         self.name=key_name+" key"+name
         self.key=key_name.upper()
         self.game=game
-        self.player=self.game.player
+        try: self.player=self.game.player
+        except: self.player = Player(); exit()
         self.collected=False
     
     def kill(self): 
-        self.game.onscreen_elements.remove(self)
+        print(self.game)
+        print(self.game.onscreen_elements)
+        try: self.game.onscreen_elements.remove(self)
+        except: pass
 
     def collide(self):
-        if debug[0]: print("collided")
+        if debug[0]: print("collided", self.name)
         global found_keys
         found_keys+=self.key
         self.kill()
@@ -213,16 +228,19 @@ class PressShow(Element):
     pass
 
 class Flip(Element):
-    def __init__(self, coords, axis="x", name="flip"):
+    def __init__(self, coords, axis="x", name="flip", game=chr(0)):
         assert axis.lower() in ("x", "y"), ValueError(f'The given axis is {axis}, but the axis must be "x" or "y"')
         if axis=="y": self.axis="y"
         if axis=="x": self.axis="x"
         degrees_of_rotation=(0 if self.axis=="x" else 90)
         super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Flipper/flipper.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_half_used.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_used.png'], (50, 50), degrees_of_rotation)
         self.name=name
-        self.player=Player()
         self.active=2
         self.block=True
+        self.game=game
+        print(game)
+        try: self.player=self.game.player
+        except: self.player = Player(); exit()
     
     def recharge(self):
         if self.a.time()>=2 and self.active==0:
@@ -262,11 +280,6 @@ class Flip(Element):
 for i in "1":
     found_keys="a".upper() #the keys the player can use
     #the_player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
-    W=Key(coords=(100, 300), key_name="w") 
-    D=Key(coords=(0, 91), key_name="d")
-    S=Key(coords=(-253, 0), key_name="s")
-    F=Flip((-250, 160), "x")
-    F2=Flip((330, 250), "y")
     #collectable keys
     trombone=play(get_target("GameAssets.lnk")+"\Sounds\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
     back_mus=play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav"); back_mus.stop(); back_mus.play(-1)
@@ -309,7 +322,7 @@ class Colour:
 #colour=(132, 30, 95)
 colour = Colour(N(max_val, max_val), N(0, max_val*2), N(0, max_val*3))
 
-config_data=eval((g:=open(r"level.cfg")).read()) #unpack and assign level configurations
+config_data=open(r"level.cfg").read() #unpack and assign level configurations
 game=Game(config_data)
 
 game.wrapper()

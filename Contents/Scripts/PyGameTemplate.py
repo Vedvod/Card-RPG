@@ -156,6 +156,8 @@ class Element:
     def in_rect(self, to_check):
         a, b = self.rect() #unpack the self rect tuple such that a is top left, b is bottom right
         c, d = to_check.rect() #unpack the target rect tuple such that c is top left, d is bottom right
+        print((a.tup(), b.tup()), self.name)
+        print((c.tup(), d.tup()), to_check.name)
         return (((c.x <= a.x <= d.x) and (c.y <= a.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= b.y <= d.y))) or (((c.x <= a.x <= d.x) and (c.y <= b.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= a.y <= d.y)))
         #raise EOFError
         #return True or False
@@ -189,7 +191,7 @@ class Element:
     "" #the base class for all elements
 
 class Player(Element):
-    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, sprite_num=1, name="somePlayer", speed=50):
+    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, sprite_num=1, name="somePlayer", speed=10):
         super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num, name)
         self.blocked=0, 0
         self.speed=speed
@@ -223,7 +225,7 @@ class Player(Element):
 
     def block_check(self): ###########################################################################################################################################################
         block_list=[]
-        for i in self.game.elements:
+        for i in self.game.onscreen_elements:
             if isinstance(i, Flip):
                 if self.in_rect(i): return True #checks if player is blocked by collision
 
