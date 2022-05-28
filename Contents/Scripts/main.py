@@ -1,10 +1,18 @@
 debug=[
- 1, #show frame start/end
+ 0, #show frame start/end
  0, #print rect coords
- 1, #display hitboxes
+ 0, #display hitboxes
  [""], #place()
- 0] #player position
-fps=60 #framerate
+ 0, #player position
+ 0, #other things position
+ 0, #room position
+ 0,
+ 0,
+ 0,
+ 0,
+ 0
+ ] 
+fps=90 #framerate
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame 
 x, y = (0, 30); os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y) #sets the position of the screen
@@ -40,26 +48,27 @@ def con(self): #temporary controls function, almost same as template one
         self.velocity+=_
         return
     x, y = 0, 0 #zero vector
-    if pressed("LEFT") and found("A"):
+    if (pressed("LEFT") or pressed("a")) and found("A"):
         x-=self.speed
-    if pressed("RIGHT") and found("D"):
+    if (pressed("RIGHT") or pressed("d")) and found("D"):
         x+=self.speed
-    if pressed("DOWN") and found("S"):
+    if (pressed("DOWN") or pressed("s")) and found("S"):
         y+=self.speed
-    if pressed("UP") and found("W"):
+    if (pressed("UP") or pressed("w")) and found("W"):
         y-=self.speed
     if debug[4]: print(f"x, y is {x, y}")
     x*=(-1)**self.flipped.x
     y*=(-1)**self.flipped.y
     ###all above creates the vector in x and y###
     match (x, y):
-        case (0, 0): _=Vector(0, 0); print("a")
+        case (0, 0): _=Vector(0, 0)
         case (x, y): _=(Vector(x, y).unit()*self.speed) #create a vector with magnitude speed in direction of above
     if debug[4]: print(f"The controls vector is {_.tup()}")
     if self.block_check(): print("g")
     self.velocity+=_ #if zero vector (nothing pressed), do nothing
     #wrap-\/-\/-\/-\/-\/-\/
     w, h = pygame.display.get_surface().get_size() #screen size
+    if debug[6]: print("wdekfdsjdjeoufsdin jioefusd POSITION IS", self.game.room_pos.tup())
     if self.position.x<0: #if at left side of screen
         if self.game.room_pos.x>0: self.game.room_pos.x-=1
         self.move(Vector((w+1), 0)) #move to right side
@@ -68,10 +77,11 @@ def con(self): #temporary controls function, almost same as template one
         if self.game.room_pos.x<len(self.game.levels)-1: self.game.room_pos.x+=1
     if self.position.y<0: #if at top of screen
         self.move(Vector(0, (h-1))) #move to bottom
-        if self.game.room_pos.y<len(self.game.levels[self.game.room_pos.x])-1: self.game.room_pos.y+=1
-    elif self.position.y>h: #if at bottom
-        self.move(Vector(0, (-h+1))) #move to top
         if self.game.room_pos.y>0: self.game.room_pos.y-=1
+    elif self.position.y>h: #if at bottom
+
+        self.move(Vector(0, (-h+1))) #move to top
+        if self.game.room_pos.y<len(self.game.levels[self.game.room_pos.x])-1: self.game.room_pos.y+=1
     #self.place() #place the player
     self.last=(_.i, _.j)
 
@@ -96,23 +106,22 @@ class Game:
         self.start=data["start_room"]
         self.name=data["level_name"]
         try: self.default_bg=data["background"]
-        except: self.default_bg=data["background_colour"]
-        #self.player=data["player"]
-        print(self.name, self.player.size, self.player.position.tup(), ", ".join([str(x.tup()) for x in self.player.rect()]))
+        except: input(err); self.default_bg=data["background_colour"]
         self.player.game=self
         self.levels=data["rooms"]
         self.room_pos=Position(self.start)
         self.recharging=[]
         self.onscreen_elements=(elements:=self.levels[self.room_pos.x][self.room_pos.y]["elements"])
+        self.mute_timer=Timer()
 
     def base_loop_start(self, level_data, i, colour): #ALWAYS DO t=base_loop_start
-        print(level_data)
         list_of_elements = level_data["elements"]
         if debug[0]: print(f"frame {i}")
         t=Timer()
-        screen.fill(colour.out())
+        try: self.default_bg.place()
+        except: screen.fill(default_bg)
         for a in list_of_elements:
-            print(a.name, a.position.tup())
+            if debug[5]: print(a.name, a.position.tup())
             if debug[1]: print([i.tup() for i in a.rect()])
             if debug[2]: a.show_hitbox() #shows bot of hit
             a.move(a.velocity)
@@ -122,15 +131,18 @@ class Game:
         return t
     def base_loop_end(self, t, i): #ALWAYS DO return base_loop_end
         pl=self.player
-        print("player")
+        if True in debug: print("player")
         pl.anim()
         pl.move()
-        pl.show_hitbox()
+        if debug[2]: pl.show_hitbox()
         pl.velocity = Vector(0, 0)
         pl.place()
         pygame.display.flip()
         if debug[0]: print(f"{t.time()*1000} milliseconds\nframe {i} end\n")
         pygame.time.delay(int(1000/fps - t.time()))
+        if pressed("m") and self.mute_timer.time() >=1:
+            self.mute_timer.reset()
+            back_mus
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
                 return True
@@ -184,9 +196,7 @@ class Game:
         c=0
         while not ended==True:
             level_data=self.levels[self.room_pos.x][self.room_pos.y]
-            print(level_data)
             self.onscreen_elements=(elements:=level_data["elements"])
-            print(elements)
             act, ended=loop[0](level_data, c, colour, act)
             c+=1
             if True in act:
@@ -205,13 +215,10 @@ class Key(Element):
         self.name=key_name+" key"+name
         self.key=key_name.upper()
         self.game=game
-        try: self.player=self.game.player
-        except: self.player = Player(); exit()
+        self.player=self.game.player
         self.collected=False
     
     def kill(self): 
-        print(self.game)
-        print(self.game.onscreen_elements)
         try: self.game.onscreen_elements.remove(self)
         except: pass
 
@@ -238,7 +245,6 @@ class Flip(Element):
         self.active=2
         self.block=True
         self.game=game
-        print(game)
         try: self.player=self.game.player
         except: self.player = Player(); exit()
     
@@ -279,10 +285,8 @@ class Flip(Element):
 #--------------------------setup--------------------------
 for i in "1":
     found_keys="a".upper() #the keys the player can use
-    #the_player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=40, _), name="player") #player
-    #collectable keys
-    trombone=play(get_target("GameAssets.lnk")+"\Sounds\lose_trombone.mp3"); trombone.set_volume(0.15); trombone.stop()
-    back_mus=play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav"); back_mus.stop(); back_mus.play(-1)
+    trombone=play(get_target("GameAssets.lnk")+"\Sounds\lose_trombone.mp3")[1]; trombone.set_volume(0.15); trombone.stop()
+    back_mus=chanplay((_:=play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav"))[0], _[1], -1)
     #sounds
 
 #SOME FPS COUNTER STUFF NEED TO UPDATE TO FIT WITH NEW FORMAT PLS DO THIS THANKS OK I TRUST YOU!!!
@@ -327,7 +331,7 @@ game=Game(config_data)
 
 game.wrapper()
 back_mus.stop()
-trombone.play(1)
+trombone.play()
 pygame.display.quit()
 time.sleep(3.5)
 input("Press Enter to exit the script...")

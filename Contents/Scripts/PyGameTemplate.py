@@ -26,10 +26,18 @@ def get_target(lnk_file):
 
 def play(location):
     pygame.mixer.init()
+    not_found=True
+    i=0
+    while not_found:
+        not_found=pygame.mixer.Channel(i).get_busy()
     x=pygame.mixer.Sound(location)
-    x.play()
-    return x
+    return i, x
     "" #play a sound from file
+
+def chanplay(channel, sound, loop=0):
+    print(sound, channel)
+    pygame.mixer.Channel(channel).play(sound)
+    return pygame.mixer.Channel(channel)
 
 #-------------------------classes-------------------------
 class Position:
@@ -64,7 +72,6 @@ class Vector:
         if self.name == "player": print(self.angle)
     
     def unit(self):
-        print(f"angle is {self.angle*180/math.pi}")
         return Vector(math.cos(self.angle), math.sin(self.angle), name=self.name)
     
     def tup(self): 
@@ -156,8 +163,8 @@ class Element:
     def in_rect(self, to_check):
         a, b = self.rect() #unpack the self rect tuple such that a is top left, b is bottom right
         c, d = to_check.rect() #unpack the target rect tuple such that c is top left, d is bottom right
-        print((a.tup(), b.tup()), self.name)
-        print((c.tup(), d.tup()), to_check.name)
+        if debug[1]: print((a.tup(), b.tup()), self.name)
+        if debug[1]: print((c.tup(), d.tup()), to_check.name)
         return (((c.x <= a.x <= d.x) and (c.y <= a.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= b.y <= d.y))) or (((c.x <= a.x <= d.x) and (c.y <= b.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= a.y <= d.y)))
         #raise EOFError
         #return True or False
