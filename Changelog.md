@@ -1,16 +1,16 @@
-﻿# Keyless Karlsson: Changelog
+# Keyless Karlsson: Changelog
 This is the changelog of my SDD HSC Major project.
 
 ## Pre-Alpha: Setting up files
 To start the project lol.
 
-### 2021/12/21
+### 2021-12-21
 - I began work on my project. I created the project repository on Github, and began planning the contents of my project.
  
-### 2021/12/22
+### 2021-12-22
 - I added the [GameAssets](https://github.com/Vedvod/Card-RPG/tree/main/Contents/GameAssets) and [Scripts](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts) folders to the repository, which contain all the assets and code respectively that I have made while prototyping,
 
-### 2021/12/23
+### 2021-12-23
 - I made some slight changes to the project hierarchy. I created a main [Contents](https://github.com/Vedvod/Card-RPG/tree/main/Contents) directory, containing both [GameAssets](https://github.com/Vedvod/Card-RPG/tree/main/Contents/GameAssets) and [Scripts](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts).
 - Made and implemented a function to access a shortcut's target from the `.lnk` file directly. This will enable me to move directories and still preserve functionality, by using `.lnk` files instead of the directory itself.
 	- The function uses the 'read binary' functionality of `open()` and linearly searches until it finds the beginning and end of the target file path, saving the string found between these two.
@@ -20,17 +20,17 @@ To start the project lol.
 ## Alpha 1: Level file loader
 To place elements as per a level config file
 
-### 2021/12/25
+### 2021-12-25
 - I implemented a file loading system, which is able to load a file written in a certain format and then load every element in the file onto the screen. This is a major milestone as every level will likely use this mechanic to load screen elements. As understanding of the requirements of the game is enhanced, this system will be altered to meet these changing requirements.
   - The operation of this system is relatively simple, with the configuration file being a list of `Element` objects written in Pythonic format. The script then runs an `eval()` on the `open()`ed contents of the given file, thus loading the list into the script. 
   - This system was tested using three [different](https://pastebin.com/EQAPkYYE) config files, and was able to load all of them.
   - This system opens the possibility of a visual level editor and custom user-made levels. The viability of each will become more clear as the game is made.
 - Moved to Github Desktop to more easily manage git tracking stuff. This does not alter much about the project, it simply makes it easier to quickly upload files to Github.
 
-### 2021/12/26
-- I updated the project documentation. I mainly went over the changelog and clarified some badly-worded entries, and I changed the date format to `YYYY/MM/DD` (rather than `DD/MM/YY`) to follow [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601).
+### 2021-12-26
+- I updated the project documentation. I mainly went over the changelog and clarified some badly-worded entries, and I changed the date format to `YYYY-MM-DD` (rather than `DD/MM/YY`) to follow [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601).
 
-### 2022/01/31
+### 2022-01-31
 Though not directly related to this project, I have made several concepts that may be used in the game.
 - Firstly, I made a ~~gambling~~ luck-based feature concept, with a steep but rewarding winnings curve.
   - I have added it to the repository under a new directory, Related Concepts.
@@ -39,24 +39,24 @@ Though not directly related to this project, I have made several concepts that m
     - The sine wave variant stutters due to an incomplete period on every note. I plan to implement a solution to this soon.
 	- It is interesting, but not surprising, that each WAVE file is roughly the same size, at around 1128 kB.
 
-### 2022/02/02
+### 2022-02-02
 - I revised some incomplete scripts, such as a button concept, which will likely be used as the basis of the GUI menus.
 - I updated some commenting on the [classes and functions script](https://github.com/Vedvod/Card-RPG/tree/main/Contents/Scripts/PyGameTemplate.py), and added in a `Timer` class, which can track the time since its creation, and be reset to a new start time
   - This class will likely be used to set the activation cooldown of `Button()`, preventing rapid feedback from a single click.
 - I started work on a new version of the `Player(Element)` class, which will utilise the updated set of `Element` class functions and allow the user to move around.
 
-### 2022/02/03
+### 2022-02-03
 - I implemented a solution to the sine wave stuttering, using a subroutine `to_multiple()`, which rounds a number to a multiple of another number, in this case to the period of the sine wave function.
   - The duration is rounded, eliminating the incomplete periods problem. Since the sine waves have a high frequency, the change in duration is negligible.
 
-### 2022/02/08
-- I did further work on the music creation concept, making a script that converts an input tuple into a WAVE file.   - This was used to create reditions of Star Spangled Banner using the three variants. 
+### 2022-02-08
+- I did further work on the music creation concept, making a script that converts an input tuple into a WAVE file.   - This was used to create renditions of Star Spangled Banner using the three variants. 
   - This will possibly allow me to add user interaction to this process, maybe eventually allowing the user to make their own music in the game.
 
 ## Alpha 2: Resizing and spacial mapping
 To place the elements and scale them with the screen.
 
-### 2022/02/09
+### 2022-02-09
 - I returned to working on the pygame visual elements.
   - Made the game window resizable.
   - Attempted to made the elements scale with the screen.
@@ -64,21 +64,21 @@ To place the elements and scale them with the screen.
   - Made a significant change to the level config file format, changing from a list of elements to a dictionary
     - The keys of the dictionary represent the different aspects of the level, as well as allowing hidden debug entries.
 
-### 2022/02/10
+### 2022-02-10
 - I improved upon the graphing in the "luck-based" concept, adding a matplotlib pyplot graph to better visualise the distribution. 
 
 ## Side plot: Text-based UNO base concept
 I have no ideas, so I'll work on this for now.
 
-### 2022/02/15
+### 2022-02-15
 - I decided to leave the pygame visuals alone for now, since I was not making much progress. I will be focusing more on the logic, with text-based visuals as a placeholder. 
 - I decided to work on an Uno variant game in the interim of ideas.
 
-### 2022/02/21
+### 2022-02-21
 - I worked more on the cards and their display.
   - This was easy and worked with minimal struggle.
 
-### 2022/02/24
+### 2022-02-24
 - I added power cards to my game, excluding reverse
   - This was challenging as I had to rewrite the existing system to accomodate wild and draw cards.
     - Since the draw two and draw four cards use the same system, I had to differntiate them and also track the current draw amount from stacking.
@@ -87,7 +87,7 @@ I have no ideas, so I'll work on this for now.
 ## Alpha 3: An actual idea!
 To turn a bad idea into a maybe good idea.
 
-### 2022/02/25
+### 2022-02-25
 - I finally decided on an idea, being a game where you collect keys for your keyboard. 
   - I have not decided on a name yet, but the interim name is Out of Control.
   - In order to move with the arrow keys, the keys must be collected in the game. This also applies to other keys.
@@ -100,7 +100,7 @@ To turn a bad idea into a maybe good idea.
 ## Beta 1.0: Keyless Karlsson
 I renamed the game and it's now official.
 
-### 2022/02/27
+### 2022-02-27
 - I started on the keyless logic of the game.
   - This involves locking a key's input until its digital counterpart is collected.
   - To achieve this, I copied the `Player.controls()` function and modified it to include the found lambda function (`found=lambda x: x in found_keys`).
@@ -110,14 +110,70 @@ I renamed the game and it's now official.
 ## Beta 1.1: Rect collision
 To test if two elements overlap.
 
-### 2022/02/28
+### 2022-02-28
 - I added sprites for the keys, and implemented them.
   - Implemented an `Element.rect()` that returns the range of coordinates that an element occupies.
   - When the `Player.rect()` intersects with a `Key.rect()`, it triggers `Key.rect_check()`'s positive.
     - This adds the key to the `found_keys` list and removes itself from the list of elements.
 
-### 2022/03/02
+### 2022-03-02
 - I added clicking detection (unsure of usage for now).
-- I optimised some code relating to the `Timer`, making implementation smoother.
+- I optimised some code relating to the `Timer` class, making the implementation smoother.
 - I added all the directional keys and set up a basis for an `anim_loop()` function, in order to have a collection animation.
 
+### 2022-03-03
+- I fixed a bug where hitboxes (logically) were vertically flipped away from the sprite, which only really altered the behaviour at the top and bottom of the screen.
+
+### 2022-03-05
+- I fixed up a few dead code blocks
+- I added some more comments
+- Resizing the window is still very broken though
+
+### 2022-03-07
+- I added some placeholder music to test it out
+- I updated the Karl sprites to be worse
+- I slightly tweaked the key collection animation
+
+### 2022-03-09
+- I removed the `Position` class for now, as it was orphaned, with regular tuples being used to store coordinates.
+  - If I can rewrite the code, I will be able to reimplement this.
+- I added a very roughly made rainbow RGB cycler function to cycle the background slowly during the key collect animation.
+
+### 2022-03-10
+- The rects and place functions were both broken/using dead code. I cleaned this up and restored their functionalities.
+- I cleaned up the code and files slightly.
+
+### 2022-03-14
+- I renamed the repo to Keyless Karlsson, since I have abandoned the card game idea
+- I tidied up some debug things
+
+## Beta 1.2: Unification (and Flippers)
+### 2022-03-15
+- I merged all game loops and functions under a master `Game` class.
+  - This greatly improves intercommunication across the game, as well as adding further structure to the code
+- I updated the readme to be not about card games
+- FLIPPERS! I added the flippers finally, or at least, I added code to implement them. 
+  - I changed Karl's sprites to visually indicate right and left.
+
+### 2022-03-20
+- I added a charging animation to the flippers to indicate when the cooldown is finished.
+- I redesigned Karl to actually look ok.
+- I implemented a rough and incomplete version of blocking.
+  - I will make it work later.
+
+### 2022-04-25
+- I took a very long break from the main project code, but in the past month, I fiddled with the .wav generator, and experimented with some music concepts.
+- I gutted my entire project, and made a long list of functions to rewrite and completely remake. 
+  - This rewrite gives me the chance to reimplement the `Position` class :)
+
+## Beta 1.3: Perestroika
+### 2022-04-26
+- I started rewriting the `Element` class, implementing the `Position` class and a new `Vector` class. 
+  - I removed some functions that were obsoleted by these two new classes, making the code overall cleaner
+- The blocking attribute is now called "solid"
+- I rewrote the rect method to return two `Position`s rather than a `numpy.linspace()`.
+- Overall, the actual main.py functions need to be rewritten for the new format, and the template functions need to be completed and cleaned up.
+
+### 2022-04-27
+- Date of submission
+  - 

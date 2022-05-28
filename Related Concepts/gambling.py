@@ -37,6 +37,8 @@ for i in reversed([x for x in rolledg.keys()]):
     if rolledg[i]==0: rolledg.pop(i)
     else: break
 plt.plot((0, 1000000), (0, 0), color="red"); plt.plot((0, 0), (0, 1000000), color="red")
+plt.xlim(0, 100)
+plt.ylim(0, [x for x in rolledg.values()][0])
 plt.plot(rolledg.keys(), rolledg.values());plt.show()
 
 print("\a", end="")

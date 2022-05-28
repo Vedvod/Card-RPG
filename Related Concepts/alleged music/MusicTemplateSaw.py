@@ -18,10 +18,10 @@ class Timer:
         self.start_time=time.time()
 
 #--------------------------setup--------------------------
-o=1; C, D, E, F, G, A, B, r = 16.35, 18.35, 20.60, 21.83, 24.50, 27.50, 30.87, 0
+o=1; C, D, E, F, G, A, B, r = 16.35, 18.35, 20.60, 21.83, 24.50, 27.50, 30.87, 0; R=r
 base_dur=60/float(input("Beats per minute? "))
 octave = lambda x, o=5: float(x)*2**o
-l=eval(f'''({input("melody in form (frequency, duration): ")}, ((r, 6.9), 0))''')
+l=eval(f'''({input("melody in form (frequency, duration): ").replace("|", "")}, ((r, 69), 0))''')
 sound_array=[]
 
 #------------------------main line------------------------

@@ -16,10 +16,10 @@ class Timer:
         self.start_time=time.time()
 
 #--------------------------setup--------------------------
-o=1; C, D, E, F, G, A, B, r = 16.35, 18.35, 20.60, 21.83, 24.50, 27.50, 30.87, 0
+o=1; C, D, E, F, G, A, B, r = 16.35, 18.35, 20.60, 21.83, 24.50, 27.50, 30.87, 0; R=r
 base_dur=60/float(input("Beats per minute? "))
 octave = lambda x, o=5: float(x)*2**o
-l=eval(f'''({input("melody in form (frequency, duration): ")}, ((r, 69), 0))''')
+l=eval(f'''({input("melody in form (frequency, duration): ").replace("|", "")}, ((r, 69), 0))''')
 print(l)
 sound_array=[]
 
@@ -31,7 +31,7 @@ for n, a in enumerate(l, 1):
     except:
         a, dur = octave(a[0]), 1
     a=int(eval(str(a).strip("a")))
-    sound_array+=(w:=(m4a(dur, a)+[0 for i in range(int(dur/4*44000))]))
+    sound_array+=(w:=(m4a(dur, a)+[0 for i in range(int(dur/8*44000))]))
     print(f"Note {n} of {len(l)} translated!")
     print(f"It has been {comp_timer.time()} seconds since composition began!")
     #plt.plot(w); plt.show()
