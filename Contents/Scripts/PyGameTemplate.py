@@ -30,13 +30,14 @@ def play(location):
     i=0
     while not_found:
         not_found=pygame.mixer.Channel(i).get_busy()
+        i+=1
     x=pygame.mixer.Sound(location)
     return i, x
     "" #play a sound from file
 
 def chanplay(channel, sound, loop=0):
     print(sound, channel)
-    pygame.mixer.Channel(channel).play(sound)
+    pygame.mixer.Channel(channel).queue(sound)
     return pygame.mixer.Channel(channel)
 
 #-------------------------classes-------------------------
@@ -169,10 +170,7 @@ class Element:
             (((c.x <= a.x <= d.x) and (c.y <= a.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= b.y <= d.y))) or 
             (((c.x <= a.x <= d.x) and (c.y <= b.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= a.y <= d.y))) or
             (((a.x <= c.x <= b.x) and (a.y <= c.y <= b.y)) or ((a.x <= d.x <= b.x) and (a.y <= d.y <= b.y))) or 
-            (((a.x <= c.x <= b.x) and (a.y <= d.y <= b.y)) or ((a.x <= d.x <= b.x) and (a.y <= c.y <= b.y)))
-            )
-        #raise EOFError
-        #return True or False
+            (((a.x <= c.x <= b.x) and (a.y <= d.y <= b.y)) or ((a.x <= d.x <= b.x) and (a.y <= c.y <= b.y))))
 
     def show_hitbox(self):
         a, b = self.rect() #unpack the self rect tuple such that a is top left, b is bottom right
@@ -201,6 +199,33 @@ class Element:
         SURF.blit(self.icon(), (coords.x-self.size[0]/2, coords.y-self.size[1]/2)) #place element using cartesian coordinates
         "" #a function to place Elements on the SURFace
     "" #the base class for all elements
+
+class Interactive(Element):
+    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, sprite_num=1, name="generic", game=chr(0)):
+        super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num, name)
+        try: self.game=game; self.game.player
+        except: self.game=Game() 
+        finally: self.player=self.game.player
+
+    def collide(self):
+        return
+        
+    def rect_check(self):
+        if self.in_rect(self.player): 
+            if debug[7]: print("collided", self.name)
+            self.collide()
+            return True
+        return False
+
+class Blocker(Interactive):
+    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, sprite_num=1, name="generic", game=chr(0)):
+        super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num, name, game)
+
+    def rect_check(self):
+        if super().rect_check():
+            self.player.blocked=True, self
+            return True
+        return False
 
 class Player(Element):
     def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, sprite_num=1, name="somePlayer", speed=10):

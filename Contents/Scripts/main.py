@@ -1,18 +1,18 @@
 debug=[
- 1, #show frame start/end
- 0, #print rect coords
- 1, #display hitboxes
- [""], #place()
- 0, #player position
- 0, #other things position
- 0, #room position
- 0,
+ 0, #0 show frame start/end
+ 0, #1 print rect coords
+ 0, #2 display hitboxes
+ [""], #3 place()
+ 0, #4 player position
+ 0, #5 other things position
+ 0, #6 room position
+ 0, #7 check collision
  0,
  0,
  0,
  0
  ] 
-fps=90 #framerate
+fps=60 #framerate
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame 
 screen = pygame.display.set_mode((1306, 681), pygame.SCALED) #set up the pygame screen
@@ -114,6 +114,7 @@ class Game:
         self.recharging=[]
         self.onscreen_elements=(elements:=self.levels[self.room_pos.x][self.room_pos.y]["elements"])
         self.mute_timer=Timer()
+        self.click_timer=Timer()
 
     def base_loop_start(self, level_data, i, colour): #ALWAYS DO t=base_loop_start
         list_of_elements = level_data["elements"]
@@ -132,7 +133,7 @@ class Game:
         return t
     def base_loop_end(self, t, i): #ALWAYS DO return base_loop_end
         pl=self.player
-        if True in debug: print("player")
+        if debug[0]: print("player")
         pl.anim()
         pl.move()
         if debug[2]: pl.show_hitbox()
@@ -150,28 +151,27 @@ class Game:
         return False
 
     def anim_loop(self, level_data, i, colour=(132, 30, 95), frames=100, final_scale=1.5):
-        colour=self.rainbow(colour) #change colour across cyclic rainbow spectrum
         t=self.base_loop_start(level_data, c, colour)
         self.player.rescale(final_scale**(1/frames))
         return self.base_loop_end(t, i) 
         "" #triggers upon collection of key
 
-    def rainbow(self, colour):
-        return colour
-        global max_val
-        for c in [colour.r, colour.b, colour.g]:
-            if c.tick%1!=0:
-                c.tick+=0.5
-                continue
-            if c.tick>=max_val*3:
-                c.tick=0
-            if c.tick<max_val:
-                c.val+=1
-            elif c.tick<max_val*2:
-                c.val-=1
-            c.tick+=0.5
-        #print(space(a.val), space(b.val), space(c.val))
-        return colour
+    # def rainbow(self, colour):
+    #     return colour
+    #     global max_val
+    #     for c in [colour.r, colour.b, colour.g]:
+    #         if c.tick%1!=0:
+    #             c.tick+=0.5
+    #             continue
+    #         if c.tick>=max_val*3:
+    #             c.tick=0
+    #         if c.tick<max_val:
+    #             c.val+=1
+    #         elif c.tick<max_val*2:
+    #             c.val-=1
+    #         c.tick+=0.5
+    #     #print(space(a.val), space(b.val), space(c.val))
+    #     return colour
 
     def main_loop(self, level_data, c, colour, act):
         list_of_elements=level_data["elements"]
@@ -187,6 +187,9 @@ class Game:
         act[1]=True in collect_1
         if debug[0]: print("player")
         self.player.check_clicked()
+        if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
+            self.click_timer.reset()
+            print(Position(pygame.mouse.get_pos()).cartesian().tup())
         self.player.controls()
         return act, self.base_loop_end(t, c)
 
@@ -205,12 +208,15 @@ class Game:
                     if i:
                         act[i]=0
                         if n==1:
-                            for e in range(frames:=15):
-                                if not ended and loop[1](level_data, c, colour, frames, 1.15):
+                            for e in range(frames:=10):
+                                if not ended and loop[1](level_data, c, colour, frames, 1.3):
+                                        ended=1
+                            for e in range(frames:=10):
+                                if not ended and loop[1](level_data, c, colour, frames, 1/1.3):
                                         ended=1
 
 
-class Key(Element):
+class Key(Interactive):
     def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, sprite_num=1, name="", game=chr(0)):
         super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation, sprite_num)
         self.name=key_name+" key"+name
@@ -224,37 +230,34 @@ class Key(Element):
         except: pass
 
     def collide(self):
-        if debug[0]: print("collided", self.name)
+        super().collide()
         global found_keys
         found_keys+=[self.key]
         self.kill()
-        
-    def rect_check(self):
-        if self.in_rect(self.player): self.collide(); return True
 
 class PressShow(Element):
     pass
 
-class Wall(Element):
+class Wall(Blocker):
     def __init__(self, rect_coords, name="someWall", game=chr(0)):
         print((((rect_coords[1][0]+rect_coords[0][0])/2, (rect_coords[1][1]+rect_coords[0][1])/2)), (abs(rect_coords[1][0]-rect_coords[0][0]), abs(rect_coords[1][1]-rect_coords[0][1])))
         coords = ((rect_coords[1][0]+rect_coords[0][0])/2, (rect_coords[1][1]+rect_coords[0][1])/2)
         size_tuple = (abs(rect_coords[1][0]-rect_coords[0][0]), abs(rect_coords[1][1]-rect_coords[0][1]))
         super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Wall/Wall_active.png', rf'{get_target("GameAssets.lnk")}/Wall/Wall_inactive.png'], size_tuple, 0, name=name)
-        self.active=2
+        self.active=True
         self.game=game
         self.player=self.game.player
 
-    def rect_check(self):
-        if self.in_rect(self.player):
-            self.player.blocked=True, self
-            self.collide()
-            return True
+    def collide(self):
+        return
+        #self.toggle()
 
-#wall1=Wall((((-50),(10)),((70),(20))))
-#input("brakepoint!!!")
+    def toggle(self):
+        self.rect_check=lambda x: None
+        self.sprite_num=2
 
-class Flip(Element):
+
+class Flip(Blocker):
     def __init__(self, coords, axis="x", name="flip", game=chr(0)):
         assert axis.lower() in ("x", "y"), ValueError(f'The given axis is {axis}, but the axis must be "x" or "y"')
         if axis=="y": self.axis="y"
@@ -271,12 +274,10 @@ class Flip(Element):
         if self.a.time()>=2 and self.active==0:
             self.active=1
             self.sprite_num=3-self.active
-            self.reinit()
         if self.a.time()>=4 and self.active==1:
             self.active=2
             self.sprite_num=3-self.active
             self.game.recharging.remove(self)
-            self.reinit()
 
     def kill(self):
         self.a=Timer()
@@ -287,23 +288,15 @@ class Flip(Element):
     def collide(self):
         if self.active==2:
             if debug[0]: pass
-            raise ValueError
-            self.player.flipped[self.axis]=not self.player.flipped[self.axis]
+            setattr(self.player.flipped, self.axis, not getattr(self.player.flipped, self.axis))
             self.kill()
-        self.reinit()
-        
-    def rect_check(self):
-        if self.in_rect(self.player):
-            self.player.blocked=True, self
-            self.collide()
-            return True
-
 
 #--------------------------setup--------------------------
 for i in "1":
-    found_keys=["a".upper()] #the keys the player can use
+    found_keys=["W", "A", "S", "D"] #the keys the player can use
     trombone=play(get_target("GameAssets.lnk")+"\Sounds\lose_trombone.mp3")[1]; trombone.set_volume(0.15); trombone.stop()
     back_mus=chanplay((_:=play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav"))[0], _[1], -1)
+    back_mus.queue(play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav")[1])
     #sounds
 
 #SOME FPS COUNTER STUFF NEED TO UPDATE TO FIT WITH NEW FORMAT PLS DO THIS THANKS OK I TRUST YOU!!!

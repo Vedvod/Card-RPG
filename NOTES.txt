@@ -3,3 +3,4 @@ Have preset sizes for game (decided at launch, possibly by command line paramete
   This fixes scaling problem
 Have walls
   Walls need to be an object that triggers collision
+DONE
