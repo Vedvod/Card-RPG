@@ -165,7 +165,12 @@ class Element:
         c, d = to_check.rect() #unpack the target rect tuple such that c is top left, d is bottom right
         if debug[1]: print((a.tup(), b.tup()), self.name)
         if debug[1]: print((c.tup(), d.tup()), to_check.name)
-        return (((c.x <= a.x <= d.x) and (c.y <= a.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= b.y <= d.y))) or (((c.x <= a.x <= d.x) and (c.y <= b.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= a.y <= d.y)))
+        return (
+            (((c.x <= a.x <= d.x) and (c.y <= a.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= b.y <= d.y))) or 
+            (((c.x <= a.x <= d.x) and (c.y <= b.y <= d.y)) or ((c.x <= b.x <= d.x) and (c.y <= a.y <= d.y))) or
+            (((a.x <= c.x <= b.x) and (a.y <= c.y <= b.y)) or ((a.x <= d.x <= b.x) and (a.y <= d.y <= b.y))) or 
+            (((a.x <= c.x <= b.x) and (a.y <= d.y <= b.y)) or ((a.x <= d.x <= b.x) and (a.y <= c.y <= b.y)))
+            )
         #raise EOFError
         #return True or False
 

@@ -1,43 +1,6 @@
-TEMPLATE
-Functions:
-get target (keep)
-play (keep)
-scalar (keep)
-project (keep)
-cartesian (keep)
-Classes:
-Timer() (keep)
-Element() (revise?) The base class for all Elements
-  __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple="", degrees_of_rotation=0, name="generic", sprite_num=1)
-  check_clicked(self)
-  place(self, coords=chr(0), SURFace)
-  rect(self, coords=chr(0))
-  inrect(self, coords) (list comp to make list of conditions, if at least one is true for both x and y then return true) 
-  move(self, x_shift=0, y_shift=0)
-  circle_movement (keep this)
-  
+WALLS (PLEASE ADD WALLS OR SOME WAY TO HAVE WALLS
+  I WAS THINKING MAYBE HAVE IT SO THEIR CREATION ARGS ARE JUST THEIR RECT DIRECTLY
 
+BUTTONS (AND TOGGLEABLE WALLS TIED TO THOSE BUTTONS)
+  BASICALLY JUST YOU GO OVER THE BUTTON AND THEN IT TRIGGERS A WALL OR UNTRIGGERS IT (single use)
 
-Player() (revise!!!) The class for specifically players 
-
-MAIN
-Functions:
-found (keep)
-pressed (keep)
-show_hitbox() (fixed)
-con (revise!) The class to replace movement, 
-    show_hitbox call
-    keep blocked code prolly
-    form vector from keystrokes then circlemove
-    wrap (keep)
-    
-changColor (from StackOverflow)
-Classes:
-Key() (probably alright)
-PressShow() (Needs to be implemented, indicates if a key is collected
-Flip() (revise??)
-Game() (Definitely revise!!!!! the looping stuff is fucked!)
-NEED TO GET COLOURS TO ACTUALLY BE GOOD LOLOLOLOLOL
-from mpmath import mp
-mp.dps = 30    # set number of digits
-print(mp.pi)

@@ -1,7 +1,7 @@
 debug=[
- 0, #show frame start/end
+ 1, #show frame start/end
  0, #print rect coords
- 0, #display hitboxes
+ 1, #display hitboxes
  [""], #place()
  0, #player position
  0, #other things position
@@ -15,7 +15,8 @@ debug=[
 fps=90 #framerate
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame 
-x, y = (0, 30); os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y) #sets the position of the screen
+screen = pygame.display.set_mode((1306, 681), pygame.SCALED) #set up the pygame screen
+#x, y = (50, 50); os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y) #sets the position of the screen
 for c in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
     try: a.append(c) #move onto the next step
     except: a=[c] #if i is first step
@@ -26,7 +27,7 @@ for c in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
 
 print(f"your screen size is {display_size}.")
 s=1; #screen = pygame.display.set_mode((int(display_size[0]/s), int(display_size[1]/s)), pygame.RESIZABLE, pygame.SCALED) #set up the pygame screen
-screen = pygame.display.set_mode((display_size[0]//s, display_size[1]//s), pygame.RESIZABLE, pygame.SCALED) #set up the pygame screen
+screen = pygame.display.set_mode((1306, 681), pygame.SCALED) #set up the pygame screen
 FPStimer = Timer()
 #-----------------------function(s)-----------------------
 found=lambda x: x in found_keys #shorthand for brevity
@@ -39,12 +40,12 @@ def con(self): #temporary controls function, almost same as template one
         try:
             if self.blocked[1].name.startswith("flip") and self.blocked[1].active==2:
                 axis = self.blocked[1].axis
-                exec(f"""self.flipped.{axis}=not self.flipped.{axis}""")
+                setattr(self.flipped, axis, not getattr(self.flipped, axis))
         except:
             pass
         #print(self.last, self.flipped, "left" if pressed("LEFT") else "right")
         self.blocked=False, 0
-        _=(Vector(x, y).unit()*self.speed) #use the circle_movement function to create a vector with constant magnitude in direction of above
+        _=(Vector(x, y).unit()*(self.speed/2)) #use the circle_movement function to create a vector with constant magnitude in direction of above
         self.velocity+=_
         return
     x, y = 0, 0 #zero vector
@@ -63,12 +64,12 @@ def con(self): #temporary controls function, almost same as template one
     match (x, y):
         case (0, 0): _=Vector(0, 0)
         case (x, y): _=(Vector(x, y).unit()*self.speed) #create a vector with magnitude speed in direction of above
-    if debug[4]: print(f"The controls vector is {_.tup()}")
+    if debug[4]: print(f"The controls vector is: {_.tup()}")
     if self.block_check(): print("g")
     self.velocity+=_ #if zero vector (nothing pressed), do nothing
     #wrap-\/-\/-\/-\/-\/-\/
     w, h = pygame.display.get_surface().get_size() #screen size
-    if debug[6]: print("wdekfdsjdjeoufsdin jioefusd POSITION IS", self.game.room_pos.tup())
+    if debug[6]: print("The room you are currently in is: ", self.game.room_pos.tup())
     if self.position.x<0: #if at left side of screen
         if self.game.room_pos.x>0: self.game.room_pos.x-=1
         self.move(Vector((w+1), 0)) #move to right side
@@ -100,7 +101,7 @@ def changColor(image, color): #from stackoverflow lmao
 #-------------------------classes-------------------------
 class Game:
     def __init__(self, data="""{"start_room":(0, 0), "level_name":"", "background":"", "player":Player(), "rooms":[[{"elements":[Element()]}]]}"""):
-        self.player=Player(coords=(0, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=80, _), name="THEplayer")
+        self.player=Player(coords=(95, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=80, _), name="THEplayer", speed=10)
         data=eval(data)
         self.data=data
         self.start=data["start_room"]
@@ -204,8 +205,8 @@ class Game:
                     if i:
                         act[i]=0
                         if n==1:
-                            for e in range(frames:=150):
-                                if not ended and loop[1](level_data, c, colour, frames, 1.25):
+                            for e in range(frames:=15):
+                                if not ended and loop[1](level_data, c, colour, frames, 1.15):
                                         ended=1
 
 
@@ -225,7 +226,7 @@ class Key(Element):
     def collide(self):
         if debug[0]: print("collided", self.name)
         global found_keys
-        found_keys+=self.key
+        found_keys+=[self.key]
         self.kill()
         
     def rect_check(self):
@@ -233,6 +234,25 @@ class Key(Element):
 
 class PressShow(Element):
     pass
+
+class Wall(Element):
+    def __init__(self, rect_coords, name="someWall", game=chr(0)):
+        print((((rect_coords[1][0]+rect_coords[0][0])/2, (rect_coords[1][1]+rect_coords[0][1])/2)), (abs(rect_coords[1][0]-rect_coords[0][0]), abs(rect_coords[1][1]-rect_coords[0][1])))
+        coords = ((rect_coords[1][0]+rect_coords[0][0])/2, (rect_coords[1][1]+rect_coords[0][1])/2)
+        size_tuple = (abs(rect_coords[1][0]-rect_coords[0][0]), abs(rect_coords[1][1]-rect_coords[0][1]))
+        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Wall/Wall_active.png', rf'{get_target("GameAssets.lnk")}/Wall/Wall_inactive.png'], size_tuple, 0, name=name)
+        self.active=2
+        self.game=game
+        self.player=self.game.player
+
+    def rect_check(self):
+        if self.in_rect(self.player):
+            self.player.blocked=True, self
+            self.collide()
+            return True
+
+#wall1=Wall((((-50),(10)),((70),(20))))
+#input("brakepoint!!!")
 
 class Flip(Element):
     def __init__(self, coords, axis="x", name="flip", game=chr(0)):
@@ -243,7 +263,6 @@ class Flip(Element):
         super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Flipper/flipper.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_half_used.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_used.png'], (50, 50), degrees_of_rotation)
         self.name=name
         self.active=2
-        self.block=True
         self.game=game
         try: self.player=self.game.player
         except: self.player = Player(); exit()
@@ -274,17 +293,15 @@ class Flip(Element):
         self.reinit()
         
     def rect_check(self):
-
         if self.in_rect(self.player):
             self.player.blocked=True, self
             self.collide()
             return True
-       
 
 
 #--------------------------setup--------------------------
 for i in "1":
-    found_keys="a".upper() #the keys the player can use
+    found_keys=["a".upper()] #the keys the player can use
     trombone=play(get_target("GameAssets.lnk")+"\Sounds\lose_trombone.mp3")[1]; trombone.set_volume(0.15); trombone.stop()
     back_mus=chanplay((_:=play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav"))[0], _[1], -1)
     #sounds
