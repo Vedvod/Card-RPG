@@ -1,16 +1,16 @@
 debug=[
- 0, #0 show frame start/end
- 0, #1 print rect coords
- 0, #2 display hitboxes
- [""], #3 place()
- 0, #4 player position
- 0, #5 other things position
- 0, #6 room position
- 1, #7 check collision
- 0,
- 0,
- 0,
- 0
+ 0, # 0 show frame start/end
+ 0, # 1 print rect coords
+ 0, # 2 display hitboxes
+ [""], # 3 place()
+ 0, # 4 player position
+ 0, # 5 other things position
+ 0, # 6 room position
+ 0, # 7 check collision
+ 0, # 8 boost stuff
+ 0, # 9
+ 0, #10
+ 0 #11
  ] 
 fps=60 #framerate
 #-------------------------modules-------------------------
@@ -230,17 +230,35 @@ class Booster(Interactive):
     def collide(self):
         super().collide()
         travel=0
-        n=8
+        n=1
+        pos=self.player.position
         while travel<self.boost_vector.magnitude:
+            self.game.default_bg.place()
+            for a in self.game.levels[self.game.room_pos.x][self.game.room_pos.y]["elements"]:
+                if debug[5]: print(a.name, a.position.tup())
+                if debug[1]: print([i.tup() for i in a.rect()])
+                if debug[2]: a.show_hitbox() #shows bot of hit
+                if type(a) in [Booster]: a.anim()
+                a.move()
+                a.velocity = Vector(0, 0)
+                if a.name in debug[3]: print(a.name, a.size, a.rotation, a.flipped.tup())
+                a.place()
+            self.player.place(pos)
             self.player.move(self.boost_vector.unit()*(self.player.speed/n))
             travel+=1/n
-            print(f"Looped for {n*travel} frames")
-            if not travel%4: self.player.place()
+            if not travel%1: self.player.place(pos); pos=self.player.position
+            if debug[8]: print(f"Looped for {n*travel} frames")
             self.anim()
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: 
                     travel=self.boost_vector.magnitude
+    
+class Trigger(Interactive):
+    def __init__(self, coords=(0, 0), size_tuple=(35, 35), sprite_num=1, name="someTrigger", game=chr(0)):
+        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Trigger/trigger1.png'], size_tuple, 0, sprite_num, name=name)
+        self.game=game
+        self.player=self.game.player
 
 class Wall(Blocker):
     def __init__(self, rect_coords, name="someWall", game=chr(0)):
