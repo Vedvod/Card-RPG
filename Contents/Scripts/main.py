@@ -89,14 +89,6 @@ Player.controls=con #override default controls with new ones
 
 #--------------------------loops--------------------------
 
-def changColor(image, color): #from stackoverflow lmao
-    colouredImage = pygame.Surface(image.get_size())
-    colouredImage.fill(color)
-    
-    finalImage = image.copy()
-    finalImage.blit(colouredImage, (0, 0), special_flags = pygame.BLEND_MULT) #????????????????????????????????????
-    return finalImage
-
 #-------------------------classes-------------------------
 class Game:
     def __init__(self, data="""{"start_room":(0, 0), "level_name":"", "background":"", "player":Player(), "rooms":[[{"elements":[Element()]}]]}"""):
@@ -221,7 +213,8 @@ class Key(Interactive):
 
 class Booster(Interactive):
     def __init__(self, coords=(0, 0), size_tuple=(35, 35), degrees_of_rotation=0, sprite_num=1, name="someBooster", game=chr(0), boost_vector=Vector(3, 0)):
-        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Booster/booster1.png', rf'{get_target("GameAssets.lnk")}/Booster/booster2.png'], size_tuple, boost_vector.angle*180/math.pi-90, sprite_num, name=name)
+        print(boost_vector.angle)
+        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Booster/booster1.png', rf'{get_target("GameAssets.lnk")}/Booster/booster2.png'], size_tuple, -boost_vector.angle*180/math.pi, sprite_num, name=name)
         self.game=game
         self.player=self.game.player
         self.collected=False
