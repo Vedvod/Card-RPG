@@ -6,7 +6,7 @@ debug=[
  0, #4 player position
  0, #5 other things position
  0, #6 room position
- 0, #7 check collision
+ 1, #7 check collision
  0,
  0,
  0,
@@ -72,16 +72,15 @@ def con(self): #temporary controls function, almost same as template one
     if debug[6]: print("The room you are currently in is: ", self.game.room_pos.tup())
     if self.position.x<0: #if at left side of screen
         if self.game.room_pos.x>0: self.game.room_pos.x-=1
-        self.move(Vector((w+1), 0)) #move to right side
+        self.velocity += (Vector((w+1), 0)) #move to right side
     elif self.position.x>w: #if at right side
-        self.move(Vector((-w+1), 0)) #move to left side
+        self.velocity += (Vector((-w+1), 0)) #move to left side
         if self.game.room_pos.x<len(self.game.levels)-1: self.game.room_pos.x+=1
     if self.position.y<0: #if at top of screen
-        self.move(Vector(0, (h-1))) #move to bottom
+        self.velocity += (Vector(0, (h-1))) #move to bottom
         if self.game.room_pos.y>0: self.game.room_pos.y-=1
     elif self.position.y>h: #if at bottom
-
-        self.move(Vector(0, (-h+1))) #move to top
+        self.velocity += (Vector(0, (-h+1))) #move to top
         if self.game.room_pos.y<len(self.game.levels[self.game.room_pos.x])-1: self.game.room_pos.y+=1
     #self.place() #place the player
     self.last=(_.i, _.j)
@@ -126,7 +125,8 @@ class Game:
             if debug[5]: print(a.name, a.position.tup())
             if debug[1]: print([i.tup() for i in a.rect()])
             if debug[2]: a.show_hitbox() #shows bot of hit
-            a.move(a.velocity)
+            if type(a) in [Booster]: a.anim()
+            a.move()
             a.velocity = Vector(0, 0)
             if a.name in debug[3]: print(a.name, a.size, a.rotation, a.flipped.tup())
             a.place()
@@ -156,23 +156,6 @@ class Game:
         return self.base_loop_end(t, i) 
         "" #triggers upon collection of key
 
-    # def rainbow(self, colour):
-    #     return colour
-    #     global max_val
-    #     for c in [colour.r, colour.b, colour.g]:
-    #         if c.tick%1!=0:
-    #             c.tick+=0.5
-    #             continue
-    #         if c.tick>=max_val*3:
-    #             c.tick=0
-    #         if c.tick<max_val:
-    #             c.val+=1
-    #         elif c.tick<max_val*2:
-    #             c.val-=1
-    #         c.tick+=0.5
-    #     #print(space(a.val), space(b.val), space(c.val))
-    #     return colour
-
     def main_loop(self, level_data, c, colour, act):
         list_of_elements=level_data["elements"]
         t=self.base_loop_start(level_data, c, colour)
@@ -182,14 +165,15 @@ class Game:
         for i in list_of_elements:
             if type(i)==Key: collect_1.append(i.rect_check())
             else: 
-                try: i.rect_check()
-                except: i.place()
+                #try: 
+                    i.rect_check()
+               # except: i.place()
         act[1]=True in collect_1
         if debug[0]: print("player")
         self.player.check_clicked()
         if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
             self.click_timer.reset()
-            print(Position(pygame.mouse.get_pos()).cartesian().tup())
+            print(f"Mouse clicked at: {Position(pygame.mouse.get_pos()).cartesian().tup()}")
         self.player.controls()
         return act, self.base_loop_end(t, c)
 
@@ -235,8 +219,28 @@ class Key(Interactive):
         found_keys+=[self.key]
         self.kill()
 
-class PressShow(Element):
-    pass
+class Booster(Interactive):
+    def __init__(self, coords=(0, 0), size_tuple=(35, 35), degrees_of_rotation=0, sprite_num=1, name="someBooster", game=chr(0), boost_vector=Vector(3, 0)):
+        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Booster/booster1.png', rf'{get_target("GameAssets.lnk")}/Booster/booster2.png'], size_tuple, boost_vector.angle*180/math.pi-90, sprite_num, name=name)
+        self.game=game
+        self.player=self.game.player
+        self.collected=False
+        self.boost_vector = boost_vector
+
+    def collide(self):
+        super().collide()
+        travel=0
+        n=8
+        while travel<self.boost_vector.magnitude:
+            self.player.move(self.boost_vector.unit()*(self.player.speed/n))
+            travel+=1/n
+            print(f"Looped for {n*travel} frames")
+            if not travel%4: self.player.place()
+            self.anim()
+            pygame.display.flip()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT: 
+                    travel=self.boost_vector.magnitude
 
 class Wall(Blocker):
     def __init__(self, rect_coords, name="someWall", game=chr(0)):
