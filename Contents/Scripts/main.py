@@ -1,7 +1,7 @@
 debug=[
  0, # 0 show frame start/end
  0, # 1 print rect coords
- 0, # 2 display hitboxes
+ 1, # 2 display hitboxes
  [""], # 3 place()
  0, # 4 player position
  0, # 5 other things position
@@ -9,8 +9,8 @@ debug=[
  0, # 7 check collision
  0, # 8 boost stuff
  0, # 9
- 0, #10
- 0 #11
+ 1, #10 mouse position stuff
+ 0  #11
  ] 
 fps=60 #framerate
 #-------------------------modules-------------------------
@@ -30,7 +30,7 @@ s=1; #screen = pygame.display.set_mode((int(display_size[0]/s), int(display_size
 screen = pygame.display.set_mode((1306, 681), pygame.SCALED) #set up the pygame screen
 FPStimer = Timer()
 #-----------------------function(s)-----------------------
-found=lambda x: x in found_keys #shorthand for brevity
+Player.found=lambda self, x: x in self.game.found_keys #shorthand for brevity
 pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key pressed
 
 def con(self): #temporary controls function, almost same as template one
@@ -49,13 +49,13 @@ def con(self): #temporary controls function, almost same as template one
         self.velocity+=_
         return
     x, y = 0, 0 #zero vector
-    if (pressed("LEFT") or pressed("a")) and found("A"):
+    if (pressed("LEFT") or pressed("a")) and self.found("A"):
         x-=self.speed
-    if (pressed("RIGHT") or pressed("d")) and found("D"):
+    if (pressed("RIGHT") or pressed("d")) and self.found("D"):
         x+=self.speed
-    if (pressed("DOWN") or pressed("s")) and found("S"):
+    if (pressed("DOWN") or pressed("s")) and self.found("S"):
         y+=self.speed
-    if (pressed("UP") or pressed("w")) and found("W"):
+    if (pressed("UP") or pressed("w")) and self.found("W"):
         y-=self.speed
     if debug[4]: print(f"x, y is {x, y}")
     x*=(-1)**self.flipped.x
@@ -91,11 +91,20 @@ Player.controls=con #override default controls with new ones
 
 #-------------------------classes-------------------------
 class Game:
+    def p_update(self):
+        for column in self.levels:
+            for row in column:
+                for elem in row["elements"]:
+                    elem.player=self.player    
+    
     def __init__(self, data="""{"start_room":(0, 0), "level_name":"", "background":"", "player":Player(), "rooms":[[{"elements":[Element()]}]]}"""):
-        self.player=Player(coords=(95, 0), paths_to_assets=[f"""{get_target("GameAssets.lnk")}\Karl\{i}.png""" for i in ("karl1", "karl2")], size_tuple=(_:=80, _), name="THEplayer", speed=10)
-        data=eval(data)
+        self.player=Player(); data=eval(data)
+        #data=data[0]|data[1]
+        del self.player
         self.data=data
         self.start=data["start_room"]
+        self.found_keys=data["found_keys"]
+        self.player=data["player"]
         self.name=data["level_name"]
         try: self.default_bg=data["background"]
         except: input(err); self.default_bg=data["background_colour"]
@@ -103,6 +112,7 @@ class Game:
         self.levels=data["rooms"]
         self.room_pos=Position(self.start)
         self.recharging=[]
+        self.p_update()
         self.onscreen_elements=(elements:=self.levels[self.room_pos.x][self.room_pos.y]["elements"])
         self.mute_timer=Timer()
         self.click_timer=Timer()
@@ -165,7 +175,10 @@ class Game:
         self.player.check_clicked()
         if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
             self.click_timer.reset()
-            print(f"Mouse clicked at: {Position(pygame.mouse.get_pos()).cartesian().tup()}")
+            if debug[10]: print(f"Mouse clicked at: {Position(pygame.mouse.get_pos()).cartesian().tup()}")
+            if self.player.in_rect((Position(pygame.mouse.get_pos()), Position(pygame.mouse.get_pos()))):
+                if debug[10]: print(f"PLayer at: {self.player.position.cartesian().tup()}")
+                if debug[10]: print(f"Player currently in room {self.room_pos.tup()}")
         self.player.controls()
         return act, self.base_loop_end(t, c)
 
@@ -194,7 +207,7 @@ class Game:
 
 class Key(Interactive):
     def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, sprite_num=1, name="", game=chr(0)):
-        super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation, sprite_num)
+        super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation, sprite_num, game=game)
         self.name=key_name+" key"+name
         self.key=key_name.upper()
         self.game=game
@@ -207,14 +220,12 @@ class Key(Interactive):
 
     def collide(self):
         super().collide()
-        global found_keys
-        found_keys+=[self.key]
+        self.game.found_keys+=[self.key]
         self.kill()
 
 class Booster(Interactive):
     def __init__(self, coords=(0, 0), size_tuple=(35, 35), degrees_of_rotation=0, sprite_num=1, name="someBooster", game=chr(0), boost_vector=Vector(3, 0)):
-        print(boost_vector.angle)
-        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Booster/booster1.png', rf'{get_target("GameAssets.lnk")}/Booster/booster2.png'], size_tuple, -boost_vector.angle*180/math.pi, sprite_num, name=name)
+        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Booster/booster1.png', rf'{get_target("GameAssets.lnk")}/Booster/booster2.png'], size_tuple, -boost_vector.angle*180/math.pi, sprite_num, name=name, game=game)
         self.game=game
         self.player=self.game.player
         self.collected=False
@@ -253,12 +264,12 @@ class Trigger(Interactive):
         self.game=game
         self.player=self.game.player
 
+
 class Wall(Blocker):
     def __init__(self, rect_coords, name="someWall", game=chr(0)):
-        print((((rect_coords[1][0]+rect_coords[0][0])/2, (rect_coords[1][1]+rect_coords[0][1])/2)), (abs(rect_coords[1][0]-rect_coords[0][0]), abs(rect_coords[1][1]-rect_coords[0][1])))
         coords = ((rect_coords[1][0]+rect_coords[0][0])/2, (rect_coords[1][1]+rect_coords[0][1])/2)
         size_tuple = (abs(rect_coords[1][0]-rect_coords[0][0]), abs(rect_coords[1][1]-rect_coords[0][1]))
-        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Wall/Wall_active.png', rf'{get_target("GameAssets.lnk")}/Wall/Wall_inactive.png'], size_tuple, 0, name=name)
+        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Wall/Wall_active.png', rf'{get_target("GameAssets.lnk")}/Wall/Wall_inactive.png'], size_tuple, 0, name=name, game=game)
         self.active=True
         self.game=game
         self.player=self.game.player
@@ -278,7 +289,7 @@ class Flip(Blocker):
         if axis=="y": self.axis="y"
         if axis=="x": self.axis="x"
         degrees_of_rotation=(0 if self.axis=="x" else 90)
-        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Flipper/flipper.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_half_used.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_used.png'], (50, 50), degrees_of_rotation)
+        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Flipper/flipper.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_half_used.png', rf'{get_target("GameAssets.lnk")}/Flipper/flipper_used.png'], (50, 50), degrees_of_rotation, game=game)
         self.name=name
         self.active=2
         self.game=game
@@ -308,10 +319,9 @@ class Flip(Blocker):
 
 #--------------------------setup--------------------------
 for i in "1":
-    found_keys=["W", "A", "S", "D"] #the keys the player can use
     trombone=play(get_target("GameAssets.lnk")+"\Sounds\lose_trombone.mp3")[1]; trombone.set_volume(0.15); trombone.stop()
     back_mus=chanplay((_:=play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav"))[0], _[1], -1)
-    back_mus.queue(play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav")[1])
+    for i in range(10): back_mus.queue(play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav")[1])
     #sounds
 
 #SOME FPS COUNTER STUFF NEED TO UPDATE TO FIT WITH NEW FORMAT PLS DO THIS THANKS OK I TRUST YOU!!!

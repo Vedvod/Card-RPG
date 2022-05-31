@@ -36,7 +36,6 @@ def play(location):
     "" #play a sound from file
 
 def chanplay(channel, sound, loop=0):
-    print(sound, channel)
     pygame.mixer.Channel(channel).queue(sound)
     return pygame.mixer.Channel(channel)
 
@@ -104,14 +103,14 @@ class Timer:
 
 
 class Element:
-    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, sprite_num=1, name="generic"):
+    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, sprite_num=1, name="generic", flip=(False, False)):
         self.position = Position(coords, True)
         self.base_images=[pygame.image.load(x) for x in (paths_to_assets if type(paths_to_assets)!=str else [paths_to_assets])]
         self.sprite_num=sprite_num
         self.sprite = lambda: self.base_images[self.sprite_num-1]
         self.size = (size_tuple if size_tuple!=chr(0) else self.sprite().get_size())
         self.true_size=self.size
-        self.flipped=Position((False, False))
+        self.flipped=Position(flip)
         self.icon=lambda: pygame.transform.flip(pygame.transform.rotate(pygame.transform.scale(self.sprite(), self.size), self.rotation), self.flipped.x, self.flipped.y)
         self.solid=False
         self.name=name
@@ -163,7 +162,8 @@ class Element:
    
     def in_rect(self, to_check):
         a, b = self.rect() #unpack the self rect tuple such that a is top left, b is bottom right
-        c, d = to_check.rect() #unpack the target rect tuple such that c is top left, d is bottom right
+        try: c, d = to_check.rect() #unpack the target rect tuple such that c is top left, d is bottom right
+        except: c, d = to_check
         if debug[1]: print((a.tup(), b.tup()), self.name)
         if debug[1]: print((c.tup(), d.tup()), to_check.name)
         return (
@@ -184,7 +184,6 @@ class Element:
         if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
             self.click_timer.reset()
             mouse_coords=pygame.mouse.get_pos()
-            print("a")
             #COMPLETE THIS TO ACTUALLY DO STUFF PLS
 
     def move(self, vec=chr(0)):
@@ -228,8 +227,8 @@ class Blocker(Interactive):
         return False
 
 class Player(Element):
-    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, sprite_num=1, name="somePlayer", speed=10):
-        super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num, name)
+    def __init__(self, coords=(0, 0), paths_to_assets=get_target("GameAssets.lnk")+r"/DefaultSprite.png", size_tuple=chr(0), degrees_of_rotation=0, sprite_num=1, name="somePlayer", speed=10, flip=(False, False)):
+        super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num, name, flip=flip)
         self.blocked=0, 0
         self.speed=speed
 
