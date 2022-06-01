@@ -12,9 +12,9 @@ debug=[
  1, #10 mouse position stuff
  0  #11
  ] 
-fps=60 #framerate
+fps=90 #framerate
 #-------------------------modules-------------------------
-import os, random, time, sys, math, pygame 
+import os, random, time, sys, math, pygame, pygame._sdl2 as sdl2
 screen = pygame.display.set_mode((1306, 681), pygame.SCALED) #set up the pygame screen
 #x, y = (50, 50); os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (x,y) #sets the position of the screen
 for c in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
@@ -28,6 +28,12 @@ for c in os.getcwd().split(chr(92)): #makes a list of the steps in the directory
 print(f"your screen size is {display_size}.")
 s=1; #screen = pygame.display.set_mode((int(display_size[0]/s), int(display_size[1]/s)), pygame.RESIZABLE, pygame.SCALED) #set up the pygame screen
 screen = pygame.display.set_mode((1306, 681), pygame.SCALED) #set up the pygame screen
+Element(
+			paths_to_assets=[get_target("GameAssets.lnk")+r"/Backgrounds/Splash Screen.png"],
+			name="splash",
+            size_tuple=(1306, 681),
+			coords=((0, 0))).place()
+pygame.display.flip()
 FPStimer = Timer()
 #-----------------------function(s)-----------------------
 Player.found=lambda self, x: x in self.game.found_keys #shorthand for brevity
@@ -86,8 +92,7 @@ def con(self): #temporary controls function, almost same as template one
     self.last=(_.i, _.j)
 
 Player.controls=con #override default controls with new ones
-
-#--------------------------loops--------------------------
+listify = lambda x: ([x] if type(x) not in [list, tuple] else x)
 
 #-------------------------classes-------------------------
 class Game:
@@ -95,9 +100,9 @@ class Game:
         for column in self.levels:
             for row in column:
                 for elem in row["elements"]:
-                    elem.player=self.player    
+                    elem.player=self.player
     
-    def __init__(self, data="""{"start_room":(0, 0), "level_name":"", "background":"", "player":Player(), "rooms":[[{"elements":[Element()]}]]}"""):
+    def __init__(self, data="""{"start_room":(0, 0), "found_keys":["W"], "level_name":"", "background":"", "player":Player(), "rooms":[[{"elements":[Element()]}]]}"""):
         self.player=Player(); data=eval(data)
         #data=data[0]|data[1]
         del self.player
@@ -110,6 +115,12 @@ class Game:
         except: input(err); self.default_bg=data["background_colour"]
         self.player.game=self
         self.levels=data["rooms"]
+        for i in self.found_keys:
+            for x in self.levels:
+                for y in x:
+                    for elem in y["elements"]:
+                        if elem.name.startswith(f"{i.lower()} key"):
+                            y["elements"].remove(elem)
         self.room_pos=Position(self.start)
         self.recharging=[]
         self.p_update()
@@ -140,6 +151,7 @@ class Game:
         pl.move()
         if debug[2]: pl.show_hitbox()
         pl.velocity = Vector(0, 0)
+        pl.position=Position([(i//0.25)*0.25 for i in pl.position.tup()])
         pl.place()
         pygame.display.flip()
         if debug[0]: print(f"{t.time()*1000} milliseconds\nframe {i} end\n")
@@ -147,7 +159,10 @@ class Game:
         if pressed("m") and self.mute_timer.time() >=1:
             self.mute_timer.reset()
             back_mus
+        
         for event in pygame.event.get():
+            if event.type==69:
+                back_mus.queue(play(rf'{get_target("GameAssets.lnk")}/Sounds/Music/'+random.choice(os.listdir(rf'{get_target("GameAssets.lnk")}/Sounds/Music')))[1])
             if event.type == pygame.QUIT: 
                 return True
         return False
@@ -167,18 +182,17 @@ class Game:
         for i in list_of_elements:
             if type(i)==Key: collect_1.append(i.rect_check())
             else: 
-                #try: 
-                    i.rect_check()
-               # except: i.place()
+                i.rect_check()
         act[1]=True in collect_1
         if debug[0]: print("player")
         self.player.check_clicked()
-        if pygame.mouse.get_pressed()[0] and self.click_timer.time()>1:
+        if pygame.mouse.get_pressed()[0] and self.click_timer.time()>0.5:
             self.click_timer.reset()
             if debug[10]: print(f"Mouse clicked at: {Position(pygame.mouse.get_pos()).cartesian().tup()}")
             if self.player.in_rect((Position(pygame.mouse.get_pos()), Position(pygame.mouse.get_pos()))):
                 if debug[10]: print(f"PLayer at: {self.player.position.cartesian().tup()}")
                 if debug[10]: print(f"Player currently in room {self.room_pos.tup()}")
+
         self.player.controls()
         return act, self.base_loop_end(t, c)
 
@@ -234,7 +248,7 @@ class Booster(Interactive):
     def collide(self):
         super().collide()
         travel=0
-        n=1
+        n=2
         pos=self.player.position
         while travel<self.boost_vector.magnitude:
             self.game.default_bg.place()
@@ -250,41 +264,52 @@ class Booster(Interactive):
             self.player.place(pos)
             self.player.move(self.boost_vector.unit()*(self.player.speed/n))
             travel+=1/n
-            if not travel%1: self.player.place(pos); pos=self.player.position
+            if not travel%1: self.player.place(pos); pos=self.player.position; self.player.anim()
             if debug[8]: print(f"Looped for {n*travel} frames")
             self.anim()
             pygame.display.flip()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: 
                     travel=self.boost_vector.magnitude
-    
-class Trigger(Interactive):
-    def __init__(self, coords=(0, 0), size_tuple=(35, 35), sprite_num=1, name="someTrigger", game=chr(0)):
-        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Trigger/trigger1.png'], size_tuple, 0, sprite_num, name=name)
-        self.game=game
-        self.player=self.game.player
 
 
 class Wall(Blocker):
-    def __init__(self, rect_coords, name="someWall", game=chr(0)):
+    def __init__(self, rect_coords=((0,0),(0,0)), name="someWall", game=Game(), active=True):
         coords = ((rect_coords[1][0]+rect_coords[0][0])/2, (rect_coords[1][1]+rect_coords[0][1])/2)
         size_tuple = (abs(rect_coords[1][0]-rect_coords[0][0]), abs(rect_coords[1][1]-rect_coords[0][1]))
         super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Wall/Wall_active.png', rf'{get_target("GameAssets.lnk")}/Wall/Wall_inactive.png'], size_tuple, 0, name=name, game=game)
-        self.active=True
         self.game=game
+        self.check=self.rect_check
         self.player=self.game.player
-
-    def collide(self):
-        return
-        #self.toggle()
+        if not active:
+            self.rect_check=lambda: None
+            self.sprite_num=2
 
     def toggle(self):
-        self.rect_check=lambda x: None
+        if self.rect_check()==None:
+            self.sprite_num=1
+            self.rect_check=self.check
+        else:
+            self.rect_check=lambda: None
+            self.sprite_num=2
+
+
+class Trigger(Interactive):
+    def __init__(self, coords=(0, 0), size_tuple=(35, 35), sprite_num=1, name="someTrigger", game=chr(0), target_list=Wall(game=Game())):
+        super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Trigger/trigger_up.png', rf'{get_target("GameAssets.lnk")}/Trigger/trigger_down.png'], size_tuple, 0, sprite_num, name=name)
+        self.game=game
+        self.player=self.game.player
+        self.targets=listify(target_list)
+
+    def collide(self):
+        clunk = chanplay(*play(get_target("GameAssets.lnk")+"\Sounds\water_shot.wav")); clunk.set_volume(0.15)
         self.sprite_num=2
+        for target in self.targets: target.toggle()
+        self.collide=lambda: None
 
 
 class Flip(Blocker):
-    def __init__(self, coords, axis="x", name="flip", game=chr(0)):
+    def __init__(self, coords, axis="x", name="flip", game=chr(0), cooldown=2):
         assert axis.lower() in ("x", "y"), ValueError(f'The given axis is {axis}, but the axis must be "x" or "y"')
         if axis=="y": self.axis="y"
         if axis=="x": self.axis="x"
@@ -293,14 +318,15 @@ class Flip(Blocker):
         self.name=name
         self.active=2
         self.game=game
+        self.cooldown=cooldown
         try: self.player=self.game.player
         except: self.player = Player(); exit()
     
     def recharge(self):
-        if self.a.time()>=2 and self.active==0:
+        if self.a.time()>=self.cooldown/2 and self.active==0:
             self.active=1
             self.sprite_num=3-self.active
-        if self.a.time()>=4 and self.active==1:
+        if self.a.time()>=self.cooldown and self.active==1:
             self.active=2
             self.sprite_num=3-self.active
             self.game.recharging.remove(self)
@@ -320,22 +346,10 @@ class Flip(Blocker):
 #--------------------------setup--------------------------
 for i in "1":
     trombone=play(get_target("GameAssets.lnk")+"\Sounds\lose_trombone.mp3")[1]; trombone.set_volume(0.15); trombone.stop()
-    back_mus=chanplay((_:=play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav"))[0], _[1], -1)
-    for i in range(10): back_mus.queue(play(get_target("GameAssets.lnk")+"\Sounds\TitleMus.wav")[1])
+    back_mus=chanplay(*(_:=play(get_target("GameAssets.lnk")+"\Sounds\Music\TitleMus.wav")))
+    back_mus.set_endevent(69)
+    print(back_mus.get_endevent())
     #sounds
-
-#SOME FPS COUNTER STUFF NEED TO UPDATE TO FIT WITH NEW FORMAT PLS DO THIS THANKS OK I TRUST YOU!!!
-#myfont = pygame.font.SysFont('comic sans ms', 20)
-#class Text(Element):
-
-#    def __init__(self, path=myfont.render("Default", False, (100, 100, 100)), coords=(0, 0), scale=1, rotate=0):
-#        super().__init__(path, coords, (scale*pygame.Surface.get_size(path)[0], scale*pygame.Surface.get_size(path)[1]), rotate)
-
-#    def reinit(self):
-#        self.size=(scale*pygame.Surface.get_size(self.image)[0], scale*pygame.Surface.get_size(self.image)[1])
-#        self.icon=pygame.transform.rotate(pygame.transform.scale(self.image, self.size), self.spin)
-
-#thing=Text(myfont.render("FPS: 0", False, (0, 0, 200)), (100, 100), 5)
 
 #------------------------main line------------------------
 ended=False

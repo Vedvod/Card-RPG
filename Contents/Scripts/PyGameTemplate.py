@@ -26,18 +26,13 @@ def get_target(lnk_file):
 
 def play(location):
     pygame.mixer.init()
-    not_found=True
-    i=0
-    while not_found:
-        not_found=pygame.mixer.Channel(i).get_busy()
-        i+=1
     x=pygame.mixer.Sound(location)
-    return i, x
+    return pygame.mixer.find_channel(), x
     "" #play a sound from file
 
 def chanplay(channel, sound, loop=0):
-    pygame.mixer.Channel(channel).queue(sound)
-    return pygame.mixer.Channel(channel)
+    channel.queue(sound)
+    return channel
 
 #-------------------------classes-------------------------
 class Position:
@@ -231,6 +226,7 @@ class Player(Element):
         super().__init__(coords, paths_to_assets, size_tuple, degrees_of_rotation, sprite_num, name, flip=flip)
         self.blocked=0, 0
         self.speed=speed
+        self.last=(0, 0)
 
     pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key pressed
     def controls(self, wrap=False): 
