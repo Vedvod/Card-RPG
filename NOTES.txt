@@ -1,6 +1,0 @@
-https://gamedev.stackexchange.com/questions/184330/non-rectangular-collision-detection-in-python-and-pygame
-Have preset sizes for game (decided at launch, possibly by command line parameters?)
-  This fixes scaling problem
-Have walls
-  Walls need to be an object that triggers collision
-DONE

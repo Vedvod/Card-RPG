@@ -1,7 +1,7 @@
 debug=[
  0, # 0 show frame start/end
  0, # 1 print rect coords
- 1, # 2 display hitboxes
+ 0, # 2 display hitboxes
  [""], # 3 place()
  0, # 4 player position
  0, # 5 other things position
@@ -9,7 +9,7 @@ debug=[
  0, # 7 check collision
  0, # 8 boost stuff
  0, # 9
- 1, #10 mouse position stuff
+ 0, #10 mouse position stuff
  0  #11
  ] 
 fps=60 #framerate
