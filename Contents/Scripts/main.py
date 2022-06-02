@@ -12,7 +12,7 @@ debug=[
  1, #10 mouse position stuff
  0  #11
  ] 
-fps=90 #framerate
+fps=60 #framerate
 #-------------------------modules-------------------------
 import os, random, time, sys, math, pygame, pygame._sdl2 as sdl2
 screen = pygame.display.set_mode((1306, 681), pygame.SCALED) #set up the pygame screen
@@ -38,6 +38,9 @@ FPStimer = Timer()
 #-----------------------function(s)-----------------------
 Player.found=lambda self, x: x in self.game.found_keys #shorthand for brevity
 pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key pressed
+pygame.joystick.init()
+con_axis = lambda x: None if pygame.joystick.get_count()!=1 else round(joysticks()[0].get_axis(x))
+joysticks = lambda: None if pygame.joystick.get_count()!=1 else [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
 
 def con(self): #temporary controls function, almost same as template one
     if debug[4]: print(f"Player's position is {self.position.tup()}") 
@@ -55,13 +58,16 @@ def con(self): #temporary controls function, almost same as template one
         self.velocity+=_
         return
     x, y = 0, 0 #zero vector
-    if (pressed("LEFT") or pressed("a")) and self.found("A"):
+    for i in joysticks():
+        pass
+        #print(i.get_name(), i.get_guid(), ", ".join([f"axis {x}: {round(i.get_axis(x), 2)}" for x in range(i.get_numaxes())]), ", ".join([f"button {x}: {i.get_button(x)}" for x in range(i.get_numbuttons())]), ", ".join([f"hat {x}: {i.get_hat(x)}" for x in range(i.get_numhats())]))
+    if (pressed("LEFT") or pressed("a") or round(con_axis(0))==-1) and self.found("A"):
         x-=self.speed
-    if (pressed("RIGHT") or pressed("d")) and self.found("D"):
+    if (pressed("RIGHT") or pressed("d") or round(con_axis(0))==1) and self.found("D"):
         x+=self.speed
-    if (pressed("DOWN") or pressed("s")) and self.found("S"):
+    if (pressed("DOWN") or pressed("s") or round(con_axis(1))==1) and self.found("S"):
         y+=self.speed
-    if (pressed("UP") or pressed("w")) and self.found("W"):
+    if (pressed("UP") or pressed("w") or round(con_axis(1))==-1) and self.found("W"):
         y-=self.speed
     if debug[4]: print(f"x, y is {x, y}")
     x*=(-1)**self.flipped.x
@@ -93,7 +99,6 @@ def con(self): #temporary controls function, almost same as template one
 
 Player.controls=con #override default controls with new ones
 listify = lambda x: ([x] if type(x) not in [list, tuple] else x)
-
 #-------------------------classes-------------------------
 class Game:
     def p_update(self):
@@ -107,14 +112,15 @@ class Game:
         #data=data[0]|data[1]
         del self.player
         self.data=data
-        self.start=data["start_room"]
-        self.found_keys=data["found_keys"]
-        self.player=data["player"]
-        self.name=data["level_name"]
+        self.music_paused=False
+        self.pause_timer=Timer()
+        attr_dict=["start", "found_keys", "player", "name", "levels"]
+        for n, i in enumerate(["start_room", "found_keys", "player", "level_name", "rooms"]):
+            try: setattr(self, attr_dict[n], data[i])
+            except: pass
         try: self.default_bg=data["background"]
         except: input(err); self.default_bg=data["background_colour"]
         self.player.game=self
-        self.levels=data["rooms"]
         for i in self.found_keys:
             for x in self.levels:
                 for y in x:
@@ -162,7 +168,9 @@ class Game:
         
         for event in pygame.event.get():
             if event.type==69:
-                back_mus.queue(play(rf'{get_target("GameAssets.lnk")}/Sounds/Music/'+random.choice(os.listdir(rf'{get_target("GameAssets.lnk")}/Sounds/Music')))[1])
+                selected=random.choice(os.listdir(rf'{get_target("GameAssets.lnk")}/Sounds/Music'))
+                print(f"Now playing: {selected}")
+                back_mus.queue(play(rf'{get_target("GameAssets.lnk")}/Sounds/Music/'+selected)[1])
             if event.type == pygame.QUIT: 
                 return True
         return False
@@ -182,16 +190,30 @@ class Game:
         for i in list_of_elements:
             if type(i)==Key: collect_1.append(i.rect_check())
             else: 
-                i.rect_check()
+                try: i.rect_check()
+                except: pass
         act[1]=True in collect_1
         if debug[0]: print("player")
         self.player.check_clicked()
+        if (pygame.joystick.get_count()>0 and joysticks()[0].get_button(4) and self.pause_timer.time()>0.3):
+            self.pause_timer.reset()
+            back_mus.pause()
+            if self.music_paused:
+                back_mus.unpause()
+            self.music_paused = not self.music_paused
+        if (pygame.joystick.get_count()>0 and joysticks()[0].get_button(5) and self.pause_timer.time()>0.3):
+            self.pause_timer.reset()
+            back_mus.stop()
+    
         if pygame.mouse.get_pressed()[0] and self.click_timer.time()>0.5:
             self.click_timer.reset()
             if debug[10]: print(f"Mouse clicked at: {Position(pygame.mouse.get_pos()).cartesian().tup()}")
             if self.player.in_rect((Position(pygame.mouse.get_pos()), Position(pygame.mouse.get_pos()))):
                 if debug[10]: print(f"PLayer at: {self.player.position.cartesian().tup()}")
                 if debug[10]: print(f"Player currently in room {self.room_pos.tup()}")
+        if (pygame.mouse.get_pressed()[1] and self.click_timer.time()>0.5) or (pygame.joystick.get_count()>0 and joysticks()[0].get_button(9)):
+            self.click_timer.reset()
+            self.__init__(open(r"level.cfg").read()) 
 
         self.player.controls()
         return act, self.base_loop_end(t, c)
@@ -218,7 +240,6 @@ class Game:
                                 if not ended and loop[1](level_data, c, colour, frames, 1/1.3):
                                         ended=1
 
-
 class Key(Interactive):
     def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, sprite_num=1, name="", game=chr(0)):
         super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation, sprite_num, game=game)
@@ -233,9 +254,24 @@ class Key(Interactive):
         except: pass
 
     def collide(self):
+        clunk = chanplay(*play(get_target("GameAssets.lnk")+"\Sounds\powerup.mp3")); clunk.set_volume(0.35)
         super().collide()
         self.game.found_keys+=[self.key]
         self.kill()
+    
+class Home(Interactive):
+    def __init__(self, coords=(0, 0), size_tuple=(80, 80), degrees_of_rotation=0, sprite_num=1, name="", game=chr(0)):
+        super().__init__(coords, rf'{get_target("GameAssets.lnk")}/house.png', size_tuple, degrees_of_rotation, sprite_num, game=game)
+        self.game=game
+        self.player=self.game.player
+    
+    def kill(self): 
+        try: self.game.onscreen_elements.remove(self)
+        except: pass
+
+    def collide(self):
+        super().collide()
+        self.game.room_pos=Position((3, 3))
 
 class Booster(Interactive):
     def __init__(self, coords=(0, 0), size_tuple=(35, 35), degrees_of_rotation=0, sprite_num=1, name="someBooster", game=chr(0), boost_vector=Vector(3, 0)):
