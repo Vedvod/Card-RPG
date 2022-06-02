@@ -4,4 +4,4 @@ Solve puzzles and help the water wizard in defeating the dark lord.
 
 ## Controls
 A keyboard will be required, a WASD keyboard is recommended, though any keyboard with arrow keys will suffice.
-Mouse implementation may appear in later stages, joystick support is being considered.
+joystick support is being considered.

@@ -39,8 +39,8 @@ FPStimer = Timer()
 Player.found=lambda self, x: x in self.game.found_keys #shorthand for brevity
 pressed=lambda x: eval(f"pygame.key.get_pressed()[pygame.K_{x}]") #check if key pressed
 pygame.joystick.init()
-con_axis = lambda x: None if pygame.joystick.get_count()!=1 else round(joysticks()[0].get_axis(x))
-joysticks = lambda: None if pygame.joystick.get_count()!=1 else [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+con_axis = lambda x: 0 if pygame.joystick.get_count()!=1 else round(joysticks()[0].get_axis(x))
+joysticks = lambda: [] if pygame.joystick.get_count()!=1 else [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())] #get plugged in joysticks
 
 def con(self): #temporary controls function, almost same as template one
     if debug[4]: print(f"Player's position is {self.position.tup()}") 
@@ -58,8 +58,9 @@ def con(self): #temporary controls function, almost same as template one
         self.velocity+=_
         return
     x, y = 0, 0 #zero vector
-    for i in joysticks():
-        pass
+    if len(joysticks())>0:
+        for i in joysticks():
+            pass
         #print(i.get_name(), i.get_guid(), ", ".join([f"axis {x}: {round(i.get_axis(x), 2)}" for x in range(i.get_numaxes())]), ", ".join([f"button {x}: {i.get_button(x)}" for x in range(i.get_numbuttons())]), ", ".join([f"hat {x}: {i.get_hat(x)}" for x in range(i.get_numhats())]))
     if (pressed("LEFT") or pressed("a") or round(con_axis(0))==-1) and self.found("A"):
         x-=self.speed
@@ -114,19 +115,19 @@ class Game:
         self.data=data
         self.music_paused=False
         self.pause_timer=Timer()
-        attr_dict=["start", "found_keys", "player", "name", "levels"]
-        for n, i in enumerate(["start_room", "found_keys", "player", "level_name", "rooms"]):
-            try: setattr(self, attr_dict[n], data[i])
+        attr_dict=["start", "found_keys", "player", "name", "levels"] #the attributes to be saved to
+        for n, i in enumerate(["start_room", "found_keys", "player", "level_name", "rooms"]): #the values to save to the attributes
+            try: setattr(self, attr_dict[n], data[i]) #set the attributes
             except: pass
         try: self.default_bg=data["background"]
-        except: input(err); self.default_bg=data["background_colour"]
+        except: input(err); self.default_bg=data["background_colour"] #if background not provided, default to using solid colour
         self.player.game=self
         for i in self.found_keys:
             for x in self.levels:
                 for y in x:
-                    for elem in y["elements"]:
-                        if elem.name.startswith(f"{i.lower()} key"):
-                            y["elements"].remove(elem)
+                    for elem in y["elements"]: #check every single element
+                        if elem.name.startswith(f"{i.lower()} key"): #if Key and in found_keys
+                            y["elements"].remove(elem) #remove keys that are canonically found already according to save state
         self.room_pos=Position(self.start)
         self.recharging=[]
         self.p_update()
@@ -134,7 +135,7 @@ class Game:
         self.mute_timer=Timer()
         self.click_timer=Timer()
 
-    def base_loop_start(self, level_data, i, colour): #ALWAYS DO t=base_loop_start
+    def base_loop_start(self, level_data, i): #ALWAYS DO t=base_loop_start
         list_of_elements = level_data["elements"]
         if debug[0]: print(f"frame {i}")
         t=Timer()
@@ -175,15 +176,15 @@ class Game:
                 return True
         return False
 
-    def anim_loop(self, level_data, i, colour=(132, 30, 95), frames=100, final_scale=1.5):
-        t=self.base_loop_start(level_data, c, colour)
+    def anim_loop(self, level_data, i, frames=100, final_scale=1.5):
+        t=self.base_loop_start(level_data, c)
         self.player.rescale(final_scale**(1/frames))
         return self.base_loop_end(t, i) 
         "" #triggers upon collection of key
 
-    def main_loop(self, level_data, c, colour, act):
+    def main_loop(self, level_data, c, act):
         list_of_elements=level_data["elements"]
-        t=self.base_loop_start(level_data, c, colour)
+        t=self.base_loop_start(level_data, c)
         for i in self.recharging:
             i.recharge()
         collect_1=[]
@@ -194,31 +195,30 @@ class Game:
                 except: pass
         act[1]=True in collect_1
         if debug[0]: print("player")
-        self.player.check_clicked()
-        if (pygame.joystick.get_count()>0 and joysticks()[0].get_button(4) and self.pause_timer.time()>0.3):
+        if (pygame.joystick.get_count()>0 and joysticks()[0].get_button(4) and self.pause_timer.time()>0.3): #for pausing/unpausing tracks
             self.pause_timer.reset()
             back_mus.pause()
             if self.music_paused:
                 back_mus.unpause()
             self.music_paused = not self.music_paused
-        if (pygame.joystick.get_count()>0 and joysticks()[0].get_button(5) and self.pause_timer.time()>0.3):
+        if (pygame.joystick.get_count()>0 and joysticks()[0].get_button(5) and self.pause_timer.time()>0.3): #for skipping tracks
             self.pause_timer.reset()
-            back_mus.stop()
+            back_mus.stop() #triggers event 69, which causes another track to be played
     
-        if pygame.mouse.get_pressed()[0] and self.click_timer.time()>0.5:
+        if pygame.mouse.get_pressed()[0] and self.click_timer.time()>0.5: #click debug stuff
             self.click_timer.reset()
             if debug[10]: print(f"Mouse clicked at: {Position(pygame.mouse.get_pos()).cartesian().tup()}")
             if self.player.in_rect((Position(pygame.mouse.get_pos()), Position(pygame.mouse.get_pos()))):
                 if debug[10]: print(f"PLayer at: {self.player.position.cartesian().tup()}")
                 if debug[10]: print(f"Player currently in room {self.room_pos.tup()}")
-        if (pygame.mouse.get_pressed()[1] and self.click_timer.time()>0.5) or (pygame.joystick.get_count()>0 and joysticks()[0].get_button(9)):
+        if (pygame.mouse.get_pressed()[1] and self.click_timer.time()>0.5) or (pygame.joystick.get_count()>0 and joysticks()[0].get_button(9)): #reloading debug stuff
             self.click_timer.reset()
-            self.__init__(open(r"level.cfg").read()) 
+            self.__init__(open(r"level.cfg").read()) #do __init__ again, but including any changes since last loaded 
 
         self.player.controls()
         return act, self.base_loop_end(t, c)
 
-    def wrapper(self):
+    def wrapper(self): #wrapper for game loops
         loop=(self.main_loop, self.anim_loop)
         act = [0, 0, 0, 0]
         ended=0
@@ -226,7 +226,7 @@ class Game:
         while not ended==True:
             level_data=self.levels[self.room_pos.x][self.room_pos.y]
             self.onscreen_elements=(elements:=level_data["elements"])
-            act, ended=loop[0](level_data, c, colour, act)
+            act, ended=loop[0](level_data, c, act)
             c+=1
             if True in act:
                 for n, i in enumerate(act):
@@ -234,13 +234,13 @@ class Game:
                         act[i]=0
                         if n==1:
                             for e in range(frames:=10):
-                                if not ended and loop[1](level_data, c, colour, frames, 1.3):
+                                if not ended and loop[1](level_data, c, frames, 1.3):
                                         ended=1
                             for e in range(frames:=10):
-                                if not ended and loop[1](level_data, c, colour, frames, 1/1.3):
+                                if not ended and loop[1](level_data, c, frames, 1/1.3):
                                         ended=1
 
-class Key(Interactive):
+class Key(Interactive): #keys
     def __init__(self, coords=(0, 0), key_name="base", size_tuple=(20, 20), degrees_of_rotation=0, sprite_num=1, name="", game=chr(0)):
         super().__init__(coords, rf'{get_target("GameAssets.lnk")}/Keys/key_{key_name}.png', size_tuple, degrees_of_rotation, sprite_num, game=game)
         self.name=key_name+" key"+name
@@ -249,7 +249,7 @@ class Key(Interactive):
         self.player=self.game.player
         self.collected=False
     
-    def kill(self): 
+    def kill(self): #after being collected
         try: self.game.onscreen_elements.remove(self)
         except: pass
 
@@ -259,21 +259,17 @@ class Key(Interactive):
         self.game.found_keys+=[self.key]
         self.kill()
     
-class Home(Interactive):
+class Home(Interactive): #final goal
     def __init__(self, coords=(0, 0), size_tuple=(80, 80), degrees_of_rotation=0, sprite_num=1, name="", game=chr(0)):
         super().__init__(coords, rf'{get_target("GameAssets.lnk")}/house.png', size_tuple, degrees_of_rotation, sprite_num, game=game)
         self.game=game
         self.player=self.game.player
-    
-    def kill(self): 
-        try: self.game.onscreen_elements.remove(self)
-        except: pass
 
     def collide(self):
         super().collide()
-        self.game.room_pos=Position((3, 3))
+        self.game.room_pos=Position((3, 3)) #victory room
 
-class Booster(Interactive):
+class Booster(Interactive):  #booster
     def __init__(self, coords=(0, 0), size_tuple=(35, 35), degrees_of_rotation=0, sprite_num=1, name="someBooster", game=chr(0), boost_vector=Vector(3, 0)):
         super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Booster/booster1.png', rf'{get_target("GameAssets.lnk")}/Booster/booster2.png'], size_tuple, -boost_vector.angle*180/math.pi, sprite_num, name=name, game=game)
         self.game=game
@@ -286,7 +282,7 @@ class Booster(Interactive):
         travel=0
         n=2
         pos=self.player.position
-        while travel<self.boost_vector.magnitude:
+        while travel<self.boost_vector.magnitude: #repeat until player travelled magnitude*self.speed pixels
             self.game.default_bg.place()
             for a in self.game.levels[self.game.room_pos.x][self.game.room_pos.y]["elements"]:
                 if debug[5]: print(a.name, a.position.tup())
@@ -311,8 +307,8 @@ class Booster(Interactive):
 
 class Wall(Blocker):
     def __init__(self, rect_coords=((0,0),(0,0)), name="someWall", game=Game(), active=True):
-        coords = ((rect_coords[1][0]+rect_coords[0][0])/2, (rect_coords[1][1]+rect_coords[0][1])/2)
-        size_tuple = (abs(rect_coords[1][0]-rect_coords[0][0]), abs(rect_coords[1][1]-rect_coords[0][1]))
+        coords = ((rect_coords[1][0]+rect_coords[0][0])/2, (rect_coords[1][1]+rect_coords[0][1])/2) #convert the given rect into coords corresponding
+        size_tuple = (abs(rect_coords[1][0]-rect_coords[0][0]), abs(rect_coords[1][1]-rect_coords[0][1])) #convert the given rect into size corresponding
         super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Wall/Wall_active.png', rf'{get_target("GameAssets.lnk")}/Wall/Wall_inactive.png'], size_tuple, 0, name=name, game=game)
         self.game=game
         self.check=self.rect_check
@@ -321,7 +317,7 @@ class Wall(Blocker):
             self.rect_check=lambda: None
             self.sprite_num=2
 
-    def toggle(self):
+    def toggle(self): #if off, on, else off
         if self.rect_check()==None:
             self.sprite_num=1
             self.rect_check=self.check
@@ -330,7 +326,7 @@ class Wall(Blocker):
             self.sprite_num=2
 
 
-class Trigger(Interactive):
+class Trigger(Interactive): #the buttons 
     def __init__(self, coords=(0, 0), size_tuple=(35, 35), sprite_num=1, name="someTrigger", game=chr(0), target_list=Wall(game=Game())):
         super().__init__(coords, [rf'{get_target("GameAssets.lnk")}/Trigger/trigger_up.png', rf'{get_target("GameAssets.lnk")}/Trigger/trigger_down.png'], size_tuple, 0, sprite_num, name=name)
         self.game=game
@@ -338,7 +334,7 @@ class Trigger(Interactive):
         self.targets=listify(target_list)
 
     def collide(self):
-        clunk = chanplay(*play(get_target("GameAssets.lnk")+"\Sounds\water_shot.wav")); clunk.set_volume(0.15)
+        clunk = chanplay(*play(get_target("GameAssets.lnk")+"\Sounds\water_shot.wav")); clunk.set_volume(0.15) #button press sound
         self.sprite_num=2
         for target in self.targets: target.toggle()
         self.collide=lambda: None
@@ -394,23 +390,6 @@ def space(x, l=3):
     while len(str(x))<l:
         x=str(x)+" "
     return x
-class N:
-    def __init__(self, val, tick):
-        self.val=val
-        self.tick=tick
-max_val=165
-class Colour:
-    def __init__(self, c1, c2, c3):
-        self.r=c1
-        self.g=c2
-        self.b=c3
-    
-    def out(self):
-        return (self.r.val, self.g.val, self.b.val)
-
-#colour=(132, 30, 95)
-colour = Colour(N(max_val, max_val), N(0, max_val*2), N(0, max_val*3))
-
 config_data=open(r"level.cfg").read() #unpack and assign level configurations
 game=Game(config_data)
 
