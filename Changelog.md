@@ -176,4 +176,6 @@ To test if two elements overlap.
 
 ### 2022-04-27
 - Date of submission
-  - 
+
+### future
+see github commits for future logging. will consider copying over once this pain is past us :)

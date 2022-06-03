@@ -214,6 +214,8 @@ class Game:
         if (pygame.mouse.get_pressed()[1] and self.click_timer.time()>0.5) or (pygame.joystick.get_count()>0 and joysticks()[0].get_button(9)): #reloading debug stuff
             self.click_timer.reset()
             self.__init__(open(r"level.cfg").read()) #do __init__ again, but including any changes since last loaded 
+        if (pygame.joystick.get_count()>0 and joysticks()[0].get_button(8)):
+            pygame.quit(); sys.exit()
 
         self.player.controls()
         return act, self.base_loop_end(t, c)
@@ -254,7 +256,7 @@ class Key(Interactive): #keys
         except: pass
 
     def collide(self):
-        clunk = chanplay(*play(get_target("GameAssets.lnk")+"\Sounds\powerup.mp3")); clunk.set_volume(0.35)
+        clunk = chanplay(*play(get_target("GameAssets.lnk")+"\Sounds\powerup.mp3")); clunk.set_volume(0.85)
         super().collide()
         self.game.found_keys+=[self.key]
         self.kill()
@@ -278,6 +280,7 @@ class Booster(Interactive):  #booster
         self.boost_vector = boost_vector
 
     def collide(self):
+        clunk = chanplay(*play(get_target("GameAssets.lnk")+"\Sounds\whoosh.mp3")); clunk.set_volume(0.90)
         super().collide()
         travel=0
         n=2
@@ -370,6 +373,7 @@ class Flip(Blocker):
         self.game.recharging.append(self)
 
     def collide(self):
+        clunk = chanplay(*play(get_target("GameAssets.lnk")+"\Sounds\Flip.mp3")); clunk.set_volume(0.9)
         if self.active==2:
             if debug[0]: pass
             setattr(self.player.flipped, self.axis, not getattr(self.player.flipped, self.axis))
